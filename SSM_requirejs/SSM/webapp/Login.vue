@@ -1,0 +1,3365 @@
+<template>
+  <div style="width:100%;height:100%;" ref="top_box" id="top_box">
+
+    <div  id="login_bg"  v-if="login_type=='cm'"  ref="login_bg" :class="'bg'+bgIndex">
+      <div class="main-bottom main-bottom-0"></div>
+      <div class="main-middle main-middle-0"></div>
+
+      <div class="main">
+        <div class="content">
+          <div>
+            <a href="#" class="login_logo"  v-if="loginBeforeData.login_logo">
+              <img :src="loginBeforeData.login_logo">
+            </a>
+
+
+          </div>
+          <div class="version" style="width:60%;min-height:200px;margin:0 auto;" v-if="loginBeforeData.login_ads && loginBeforeData.login_ads.length>0">
+
+            <el-carousel trigger="click" indicator-position="outside" :style="{height:carousel_height+'px'}">
+              <el-carousel-item v-for="(item,k) in loginBeforeData.login_ads" :key="k" v-if="loginBeforeData.login_ads">
+                <a :href="item.link" target="_blank" v-if="item.link">
+                  <img :src="item.image" style="width:100%;max-width:100%;">
+                </a>
+                <img :src="item.image" style="width:100%;max-width:100%;" v-if="!item.link">
+              </el-carousel-item>
+            </el-carousel>
+
+          </div>
+          <!--<div style="width:300px;padding-left:20px;margin-top:30px;">-->
+          <!--<a :href="loginBeforeData.login_ads[0].link" target="_blank" >-->
+          <!--<img :src="loginBeforeData.login_ads[0].image" style="width:100%;max-width:100%;">-->
+          <!--</a>-->
+          <!--</div>-->
+          <div class="copyright" style="text-align:center;">
+            <label>
+              Copyright © <span>{{loginBeforeData.name}}</span>
+            </label>
+            <div>
+              <span v-if="loginBeforeData.is_gwab" style="margin-right:6px;">
+                <img src="~@/assets/img/login/beian.png" style="vertical-align:middle;" />
+                <a :href="loginBeforeData.gwab_link" v-if="loginBeforeData.gwab_link"  target="_blank" style="color:#fff;text-decoration:none;">  {{loginBeforeData.gwab_no}}</a>
+                <span v-else> {{loginBeforeData.gwab_no}}</span>
+              </span>
+              <span v-if="loginBeforeData.is_icp">
+                <a :href="loginBeforeData.icp_link" v-if="loginBeforeData.icp_link"  target="_blank" style="color:#fff;text-decoration:none;">  {{loginBeforeData.icp_no}}</a>
+                <span v-if="!loginBeforeData.icp_link">  {{loginBeforeData.icp_no}}</span>
+              </span>
+            </div>
+            
+
+          </div>
+        </div>
+        <div class="aside-blur" style="min-width: 400px;z-index:10;" v-show="!loginBeforeData.rm_shadow">
+
+        </div>
+        <div class="aside" style="min-width: 400px;z-index:11;" ref="aside">
+          <div class="text-center">
+            <a v-for="(item,k) in loginBeforeData.login_links" :key="k" :href="item[1]" target="_blank" style="color:#fff;padding-right:20px;">{{item[2]}}</a>
+            <el-button type="text" style="color:#fff;" @click="remark_page">
+              <!--<i class="el-icon-star-off" style="font-size:18px;"></i>-->
+              {{lan.REMARK_PAGE}}
+            </el-button>
+            <el-button v-if="loginBeforeData.is_register" type="text" @click="show_agreement_dialog" style="color:#fff">{{lan.USER_REGISTRATION}}</el-button>
+            <el-button type="text" style="color:#fff" @click="goToHelp">
+              <!--<i class="iconfont icon-iconhelp1" style="font-size:18px;"></i>-->
+              {{lan.LAYOUT_INDEX_HELP_CENTER}}</el-button>
+          </div>
+          <div class="loginArea normalForm" curtype="normalForm">
+            <div id="login_box" style="min-width:346px;width: 54%;margin:0 auto;">
+              <div class="flex">
+                <h2 class="text-center flex_grow_1" style="cursor:pointer;padding-bottom:8px;color:#429bed;border-bottom:1px solid transparent" :style="{'borderColor':login_tab==0?'#429bed':'transparent'}" @click="login_tab=0">{{lan.user_login}}</h2>
+                <h2 v-if="loginBeforeData.is_wxlogin" class="text-center flex_grow_1" style="cursor:pointer;padding-bottom:8px;color:#2eb837;border-bottom:1px solid transparent" :style="{'borderColor':login_tab==1?'#2eb837':'transparent'}" @click="login_type_wx">
+                  <img src="@/assets/img/login/weixin.png" alt="wx" style="vertical-align: middle;top: -2px;position: relative;">{{lan.WECHART_LOGIN}}</h2>
+              </div>
+
+              <el-form v-show="login_tab==0" :label-position="labelPosition" class="loginForm" ref="loginForm" :rules="rules" label-width="80px" :model="formLabelAlign">
+                <el-form-item :label="lan.user_name" prop="username" style="">
+
+                  <label slot="label">
+                    <template>
+                      <el-select v-model="language" @change="changeLanguage" class="no_border" style="float:right;width:124px;">
+                        <el-option label="中文（简体）" value="zh-hans"></el-option>
+                        <el-option label="中文（繁體）" value="zh-tw"></el-option>
+                        <el-option label="English" value="en"></el-option>
+                        <!--<el-option label="Español" value="es" disabled></el-option>-->
+                      </el-select>
+                      <span>{{lan.user_name}}</span>
+
+                    </template>
+                  </label>
+
+                  <el-input tabindex="1" :placeholder="lan.placeholder_user_name" v-model.trim="formLabelAlign.username" class="input-with-select no_padding_select" name="username" clearable autocomplete="off">
+                    <template slot="append" v-if="loginBeforeData.is_domain == 1">@
+                      <el-select  v-model="loginBeforeData.domain"  :placeholder="lan.please_choose"  style="width:160px;padding:0" @change="changeDomain">
+                        <el-option v-for="(d,k) in loginBeforeData.domains" :key="k" :label="d[1]" :value="d[1]"></el-option>
+                      </el-select>
+                    </template>
+                    <template slot="append" v-if="loginBeforeData.is_domain == 2">@
+                      <span>{{loginBeforeData.domain}}</span>
+                    </template>
+
+                  </el-input>
+                </el-form-item>
+                <el-form-item :label="lan.password" prop="password">
+                  <el-input tabindex="2" v-if="loginBeforeData.remember_me" type="password" @focus="pwd_focus_fn" v-model="formLabelAlign.password" autocomplete="off" clearable></el-input>
+                  <el-input tabindex="2" v-if="!loginBeforeData.remember_me" type="text" @focus="pwd_focus_fn" v-model="formLabelAlign.password" autocomplete="off" clearable class="no_re_pwd"></el-input>
+                  <span  v-if="!loginBeforeData.remember_me" class="hid_pwd">{{formLabelAlign.password | pwd_to_hid}}</span>
+
+                </el-form-item>
+                <div >
+                  <div id="mpanel" class="veri" :class="{success_verify:wy_veryfy}" style="margin-top:20px;margin-bottom:20px;margin:20px auto;"></div>
+                </div>
+                <div style="height:30px;display:flex;align-items: center;justify-content: space-between;">
+                  <el-checkbox v-if="loginBeforeData.remember_me" style="float:left;flex-grow:1;" v-model="rememberUserInfo" :class="{'is-checked el-checkbox__input':rememberUserInfo}">{{lan.LOGIN_REMEMBER_USERNAME}}</el-checkbox>
+                  <!--ssl登录-->
+                  <el-checkbox style="float:left;flex-grow:1;" v-if="!loginBeforeData.is_https && loginBeforeData.is_ssl" v-model="ssl_login" :class="{'is-checked el-checkbox__input':ssl_login}" @change="changeSSL">{{lan.SSL_LOGIN}}</el-checkbox>
+                  <div style="text-align:right;flex-grow:1;">
+                    <el-button type="text" style="float:right;padding:0;color:#e6a23c;" @click="forget">{{lan.forget_password}}</el-button>
+                  </div>
+                </div>
+
+              </el-form>
+              <div v-show="login_tab==0" class="text-center">
+                <el-button type="primary" @click="login" :loading="loading_core" style="width:50%">{{lan.login}}</el-button>
+
+              </div>
+              <div v-show="login_tab==1" style="height:314px;">
+                <div id="wx_qrcode"></div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+
+      </div>
+
+      <!--弹窗-->
+
+    </div>
+    <div id="div_main" v-if="login_type=='xsy'"  class="register-wrapper ">
+      <div class="crm-register-bg" >
+        <div class="crm-register-form crm-login-form login_box">
+          <header class="crm-login1-header">
+            <h1>{{lan.LOGIN_WELCOME}}</h1>
+          </header>
+          <div class="crm-register-body crm-login1-body">
+            <ul>
+              <li>
+                <!--<div class="crm-register-input-warpper error">-->
+
+                <div class="crm-register-input-warpper" :class="{error:username_error}" style="white-space: nowrap;">
+
+                  <el-input type="text" class="crm-register-input user_name" name="username" v-model.trim="formLabelAlign.username" :placeholder="lan.placeholder_user_name" tabindex="1"  @focus="username_error=false" clearable></el-input>
+
+                  <el-select v-if="loginBeforeData.is_domain == 1" v-model="loginBeforeData.domain"  :placeholder="lan.please_choose"  style="width:152px;float:right" @change="changeDomain" class="no_bg_select">
+                    <el-option v-for="(d,k) in loginBeforeData.domains" :key="k" :label="'@ '+d[1]" :value="d[1]"></el-option>
+                  </el-select>
+                  <span v-if="loginBeforeData.is_domain == 2" style="font-size:16px;">@ {{loginBeforeData.domain}}</span>
+                </div>
+                <span class="errorinfo error_1 " v-if="username_error">{{lan.LOGIN_USERNAME_RULE}}</span>
+              </li>
+              <li>
+                <div class="crm-register-input-warpper" :class="{error:password_error}">
+
+                  <el-input  v-if="loginBeforeData.remember_me" class="crm-register-input user_pwd" type="password"  v-model="formLabelAlign.password" :placeholder="lan.LAYOUT_INDEX_PASSWORD_RULE" tabindex="2"  @focus="pwd_focus_fn" clearable></el-input>
+                  <el-input  v-if="!loginBeforeData.remember_me" class="crm-register-input user_pwd no_re_pwd" type="text"  v-model="formLabelAlign.password" :placeholder="lan.LAYOUT_INDEX_PASSWORD_RULE" tabindex="2"  @focus="pwd_focus_fn" clearable></el-input>
+                  <span  v-if="!loginBeforeData.remember_me" class="hid_pwd">{{formLabelAlign.password | pwd_to_hid}}</span>
+
+                  <!--<el-input  v-if="!loginBeforeData.remember_me && na_type_gg" class="crm-register-input user_pwd" type="text"  v-model="formLabelAlign.password" :placeholder="lan.LAYOUT_INDEX_PASSWORD_RULE" tabindex="2"  @focus="pwd_focus_fn" clearable style="-webkit-text-security:disc;text-security:disc;"></el-input>-->
+                  <!--<el-input  v-if="!loginBeforeData.remember_me && !na_type_gg" class="crm-register-input user_pwd" :type="password_type"  v-model="formLabelAlign.password" :placeholder="lan.LAYOUT_INDEX_PASSWORD_RULE" tabindex="2"  @focus="pwd_focus_fn" clearable></el-input>-->
+
+
+                  <span class="crm-register-verification dinline-block" style="">
+                    <a href="#" act="pwd_forget" tabindex="4" style="display:block;"  @click.prevent="forget">{{lan.forget_password}}</a>
+                  </span>
+                </div>
+                <span class="errorinfo error_2" v-if="password_error">{{lan.LAYOUT_INDEX_PASSWORD_RULE}}</span>
+              </li>
+              <li style="width:385px;">
+                <div id="mpanel" class="veri" :class="{success_verify:wy_veryfy}" style="margin-top:40px;color:#333;"></div>
+              </li>
+              <li style="text-align:left;display: flex;justify-content: space-between;">
+                <el-checkbox v-if="loginBeforeData.remember_me" v-model="rememberUserInfo" :class="{'is-checked el-checkbox__input':rememberUserInfo}" style="color:#fff;flex-grow:1;">{{lan.LOGIN_REMEMBER_USERNAME}}</el-checkbox>
+                <!--ssl登录-->
+                <el-checkbox  v-if="!loginBeforeData.is_https && loginBeforeData.is_ssl" v-model="ssl_login" :class="{'is-checked el-checkbox__input':ssl_login}" @change="changeSSL" style="color:#fff;flex-grow:1;text-align:right;">{{lan.SSL_LOGIN}}</el-checkbox>
+              </li>
+            </ul>
+          </div>
+          <div class="crm-register-footer">
+
+            <!--<a href="javascript:;" class="pg-btn-submit dinline-block " tabindex="3" act="login_btn" @click.prevent="login_xsy">{{lan.login}}</a>-->
+            <el-button @click.prevent="login_xsy" class="pg-btn-submit" :loading="loading_xsy" type="primary" style="outline:none;line-height:0;">{{lan.login}}</el-button>
+            <span v-if="loginBeforeData.is_wxlogin" class="text-center" style="float:right;margin-top:10px;margin-right:20px;cursor:pointer;padding-bottom:8px;color:#2eb837;font-size:16px;"  @click="xsy_wx_login">
+                  <img src="@/assets/img/login/weixin.png" alt="wx" style="vertical-align: middle;top: -2px;position: relative;">{{lan.WECHART_LOGIN}}</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!--微信扫码登录弹框-->
+    <el-dialog :title="lan.WECHART_LOGIN" :visible.sync="wx_login_dialog" width="500px" :append-to-body="true" :close-on-click-modal="false">
+      <div style="height:314px;">
+        <div id="wx_qrcode"></div>
+      </div>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="wx_login_dialog = false">{{lan.COMMON_CLOSE}}</el-button>
+      </div>
+
+    </el-dialog>
+
+      <a href="#" v-if="loginBeforeData.login_logo">{{loginBeforeData.login_logo}}
+        <div class="bottom-logo">
+          <img :src="loginBeforeData.login_logo">
+        </div>
+      </a>
+      <!--<a href="#"  v-if="loginBeforeData.login_logo">-->
+              <!--<img :src="loginBeforeData.login_logo" alt=" U-Mail">-->
+            <!--</a>-->
+
+      <div class="crm-register-container">
+        <a v-for="(item,k) in loginBeforeData.login_links" :key="k" style="color:#fff" :href="item[1]" target="_blank">{{item[2]}}</a>
+        <a href="#" class="register_link" @click.prevent="remark_page" style="color:#fff" >{{lan.REMARK_PAGE}}</a>
+        <a href="#" v-if="loginBeforeData.is_register" class="register_link" tabindex="6" act="reg_link"  @click.prevent="show_agreement_dialog">{{lan.USER_REGISTRATION}}</a>
+        <a href="#" class="register_link" style="color:#fff" @click.prevent="goToHelp">{{lan.LAYOUT_INDEX_HELP_CENTER}}</a>
+        <el-select v-model="language" @change="changeLanguage" class="no_border" style="width:144px;color:#fff;">
+          <el-option label="中文（简体）" value="zh-hans"></el-option>
+          <el-option label="中文（繁體）" value="zh-tw"></el-option>
+          <el-option label="English" value="en"></el-option>
+          <!--<el-option label="Español" value="es" disabled></el-option>-->
+        </el-select>
+      </div>
+      <div class="crm-beian-container">
+        <p style="color: rgba(255, 255, 255, 0.48);float:right;margin:0 40px 0 5px;">
+          Copyright © <span>{{loginBeforeData.name}}</span>
+          <span v-if="loginBeforeData.is_gwab" style="margin:0 6px;"> |
+            <img src="~@/assets/img/login/beian.png" style="vertical-align:middle;" />
+            <a :href="loginBeforeData.gwab_link" v-if="loginBeforeData.gwab_link"  target="_blank" style="color:rgba(255, 255, 255, 0.48);text-decoration:none;"> {{loginBeforeData.gwab_no}}</a>
+            <span v-else> {{loginBeforeData.gwab_no}}</span>
+          </span>
+          <span v-if="loginBeforeData.is_icp">
+            <a :href="loginBeforeData.icp_link" v-if="loginBeforeData.icp_link"  target="_blank" style="color:rgba(255, 255, 255, 0.48);text-decoration:none;"> | {{loginBeforeData.icp_no}}</a>
+            <span v-if="!loginBeforeData.icp_link"> | {{loginBeforeData.icp_no}}</span>
+          </span>
+        </p>
+      </div>
+    </div>
+    <div v-if="login_type=='wy'" id="login_wy" :style="{'padding-top':wy_padding_top+'px'}">
+      <div class="header">
+        <h1 class="headerLogo">
+          <a href="#"  v-if="loginBeforeData.login_logo">
+              <img :src="loginBeforeData.login_logo">
+            </a>
+        </h1>
+        <div class="headerNav">
+          <a v-for="(item,k) in loginBeforeData.login_links" :key="k" :href="item[1]" target="_blank">{{item[2]}}</a>
+          <a href="#" type="text" @click.prevent="remark_page">{{lan.REMARK_PAGE}}</a>
+          <a href="#" v-if="loginBeforeData.is_register" type="default" @click.prevent="show_agreement_dialog">{{lan.USER_REGISTRATION}}</a>
+          <a href="#" type="text" @click.prevent="goToHelp">{{lan.LAYOUT_INDEX_HELP_CENTER}}</a>
+          <el-select v-model="language" @change="changeLanguage" class="no_border change_language" style="width:134px;">
+            <el-option label="中文（简体）" value="zh-hans"></el-option>
+            <el-option label="中文（繁體）" value="zh-tw"></el-option>
+            <el-option label="English" value="en"></el-option>
+            <!--<el-option label="Español" value="es" disabled></el-option>-->
+          </el-select>
+        </div>
+      </div>
+      <div class="main_wy" :class="'bg'+wy_bg" id="mainBg" >
+        <div class="main-inner" id="mainCnt" @mouseenter="stop_timer" @mouseleave="start_timer" >
+          <!--:style="{'background-image':loginBeforeData.login_ads[wy_bg-1]?'url('+loginBeforeData.login_ads[wy_bg-1].image+')':''}"-->
+          <div class="main-inner-wrap">
+            <div id="theme" :style="{visibility: (loginBeforeData.login_ads&&loginBeforeData.login_ads.length>0?'visible':'hidden')}">
+              <a :href="loginBeforeData.login_ads[wy_bg-1]?loginBeforeData.login_ads[wy_bg-1].link:''" target="_blank" style="position: absolute; width: 605px; height: 600px; left: 0px; top: 0px; cursor: pointer;"></a>
+            </div>
+            <div class="themeCtrl" v-show="wy_bg>1">
+              <a id="prevTheme" class="prevTheme" href="javascript:void(0);" :title="lan.LOGIN_PREV" style="display: block;" @click="prevTheme"></a>
+              <a id="nextTheme" class="nextTheme" href="javascript:void(0);" :title="lan.LOGIN_NEXT" style="display: block;" @click="nextTheme"></a>
+            </div>
+            <!--登录框-->
+            <div id="loginBlock">
+              <div class="loginFunc flex">
+                <div id="lbApp" class="loginFuncApp flex_grow_1"  @click="login_tab=0" style="border-bottom:1px solid transparent;color:#409EFF;" :style="{'borderColor':login_tab==0?'#409EFF':'transparent'}">{{lan.LOGIN_FOR_USERNAME}}</div>
+                <div v-if="loginBeforeData.is_wxlogin" class="text-center flex_grow_1" style="cursor:pointer;padding-bottom:8px;color:#2eb837;border-bottom:1px solid transparent;line-height: 48px;font-size:18px;" :style="{'borderColor':login_tab==1?'#2eb837':'transparent'}" @click="login_type_wx">
+                  <img src="@/assets/img/login/weixin.png" alt="wx" style="vertical-align: middle;top: -2px;position: relative;">{{lan.WECHART_LOGIN}}</div>
+              </div>
+              <div id="normalLoginTab" class="loginForm">
+                <div v-show="login_tab==0" class="loginWrap">
+                  <div id="loginDiv">
+                    <div class="m-cnt">
+                      <el-form :rules="rules" :model="formLabelAlign">
+                        <el-form-item label=""  >
+                        <el-input prefix-icon="el-icon-message" :placeholder="lan.placeholder_user_name" v-model.trim="formLabelAlign.username" class="input-with-select input_height_46_box no_padding_select" name="username" clearable :class="{is_error:wy_username_error}" @focus="wy_username_error=false" tabindex="1">
+                          <template slot="append" v-if="loginBeforeData.is_domain == 1">@
+                            <el-select tabindex="-1" v-model="loginBeforeData.domain"  :placeholder="lan.please_choose"  style="width:160px;padding:0;" @change="changeDomain">
+                              <el-option v-for="(d,k) in loginBeforeData.domains" :key="k" :label="d[1]" :value="d[1]"></el-option>
+                            </el-select>
+                          </template>
+                          <template slot="append" v-if="loginBeforeData.is_domain == 2">@
+                            <span>{{loginBeforeData.domain}}</span>
+                          </template>
+                        </el-input>
+                        </el-form-item>
+                        <!--<el-input type="text" name="username" v-model.trim="formLabelAlign.username" style="display:none;"></el-input>-->
+
+                        <el-form-item label="" prop="password">
+                        <el-input tabindex="2" prefix-icon="el-icon-goods"  type="password" v-if="loginBeforeData.remember_me" v-model="formLabelAlign.password" clearable class="input_height_46_box text_to_password" :class="{is_error:wy_password_error}" @focus="pwd_focus_fn"></el-input>
+
+                        <el-input tabindex="2" prefix-icon="el-icon-goods"  type="text" v-if="!loginBeforeData.remember_me" v-model="formLabelAlign.password" clearable class="input_height_46_box no_re_pwd" :class="{is_error:wy_password_error}" @focus="pwd_focus_fn"></el-input>
+                        <span  v-if="!loginBeforeData.remember_me" class="hid_pwd">{{formLabelAlign.password | pwd_to_hid}}</span>
+
+                        </el-form-item>
+
+                        <div id="mpanel" class="veri" :class="{success_verify:wy_veryfy}" style="margin-top:40px;"></div>
+                        <div  class="m-unlogin" style="display: flex;justify-content:space-between;">
+                          <el-checkbox v-if="loginBeforeData.remember_me"  v-model="rememberUserInfo" :class="{'is-checked el-checkbox__input':rememberUserInfo}" style="vertical-align:middle;flex-grow:1">{{lan.LOGIN_REMEMBER_USERNAME}}</el-checkbox>
+                          <!--ssl登录-->
+                          <el-checkbox  v-if="!loginBeforeData.is_https && loginBeforeData.is_ssl" v-model="ssl_login" :class="{'is-checked el-checkbox__input':ssl_login}" @change="changeSSL" style="vertical-align:middle;flex-grow:1">{{lan.SSL_LOGIN}}</el-checkbox>
+                          <div style="padding:0;color:#3182d9;flex-grow:1;text-align:right;">
+                            <el-button type="text"  @click="forget" style="padding:0;">{{lan.forget_password}}</el-button>
+                          </div>
+                        </div>
+                        <el-row :gutter="10">
+                          <el-col :span="24">
+                            <el-button type="primary" tabindex="3" style="width:100%;height:46px;" @click="login_wy" :loading="loading_wy">{{lan.login}}</el-button>
+
+                          </el-col>
+                        </el-row>
+                      </el-form>
+                    </div>
+
+
+                  </div>
+                </div>
+                <div v-show="login_tab==0" id="loginExt" class="ext">
+                  <ul id="extText">
+                    <li class="ext-1">
+                        {{lan.LOGIN_WY_DESC1}}
+
+                    </li>
+                    <li class="ext-2">
+                      {{lan.LOGIN_WY_DESC2}}
+                    </li>
+                  </ul>
+                </div>
+                <div v-show="login_tab==1" style="height:314px;">
+                  <div id="wx_qrcode"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 隐藏广告的小图标 -->
+          <img v-if="false&&loginBeforeData.login_ads && loginBeforeData.login_ads.length>0" id="adtag" width="22" height="14" src="../../assets/img/login/ad.png" style="position: absolute; left: 50%; bottom: 4px; margin-left: -484px; border: 0px;">
+        </div>
+      </div>
+      <div id="footer">
+        <div>
+           Copyright © <span>{{loginBeforeData.name}}</span>
+            <span v-if="loginBeforeData.is_gwab" style="margin:0 6px;"> |
+              <img src="~@/assets/img/login/beian.png" style="vertical-align:middle;" />
+              <a :href="loginBeforeData.gwab_link" v-if="loginBeforeData.gwab_link"  target="_blank" style="color:#848585;text-decoration:none;"> {{loginBeforeData.gwab_no}}</a>
+              <span v-else> {{loginBeforeData.gwab_no}}</span>
+            </span>
+          <span v-if="loginBeforeData.is_icp">
+            <a :href="loginBeforeData.icp_link" v-if="loginBeforeData.icp_link"  target="_blank" style="color:#848585;text-decoration:none;"> | {{loginBeforeData.icp_no}}</a>
+            <span v-if="!loginBeforeData.icp_link"> | {{loginBeforeData.icp_no}}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+
+    <!--密保 找回密码第二步-->
+    <el-dialog :title="lan.reset_password" :visible.sync="formVisible" width="400px" :append-to-body="true" :close-on-click-modal="false">
+            <el-form :model="form" size="small" :rules="formRule" ref="reset2Form">
+              <el-input v-model="form.carbled" type="hidden" style="display:none;"></el-input>
+              <el-form-item :label="lan.placeholder_validation_code +form.code_label" prop="code">
+                <el-input v-model.trim="form.code" auto-complete="off"></el-input>
+              </el-form-item>
+              <el-form-item :label="form.label_q1" prop="q1">
+                <el-input v-model.trim="form.q1" auto-complete="off"></el-input>
+              </el-form-item>
+              <el-form-item :label="form.label_q2" prop="q2">
+                <el-input v-model.trim="form.q2" auto-complete="off"></el-input>
+              </el-form-item>
+              <el-form-item :label="form.label_q3" prop="q3">
+                <el-input v-model.trim="form.q3" auto-complete="off"></el-input>
+              </el-form-item>
+
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+              <el-button @click="formVisible = false">{{lan.cancel}}</el-button>
+              <el-button type="primary" @click="reset2_submit">{{lan.sure}}</el-button>
+            </div>
+
+          </el-dialog>
+
+    <!--密保 找回密码第三步-->
+    <el-dialog :title="lan.reset_password" :visible.sync="form3Visible" width="400px" :append-to-body="true" :close-on-click-modal="false">
+      <el-form :model="form3" size="small" :rules="form3Rule" ref="reset3Form">
+        <el-input v-model="form3.carbled" type="hidden" style="display:none;"></el-input>
+        <el-input v-model.trim="form3.new_carbled" type="hidden" style="display:none;"></el-input>
+
+        <el-form-item :label="lan.COMMON_NEW_PASSWORD" prop="new_password">
+          <el-input v-model.trim="form3_new_password_input" type="text" v-popover:popover_f @keyup.native="$trans_pwd('form3_new_password_input','form3.new_password')"></el-input>
+          <el-input type="hidden" v-model.trim="form3.new_password" v-show="false"></el-input>
+        </el-form-item>
+        <el-form-item :label="lan.COMMON_CONFIRM_PASSWORD" prop="confirm_password">
+          <el-input v-model.trim="form3_confirm_password_input" type="text" @keyup.native="$trans_pwd('form3_confirm_password_input','form3.confirm_password')"></el-input>
+          <el-input type="hidden" v-model.trim="form3.confirm_password" v-show="false"></el-input>
+        </el-form-item>
+        <div v-if="false">
+          <div>
+            <strong style="color: red">{{lan.COMMON_PASSWORD_NOTICE}}</strong>
+            <ul style="margin-left: 26px;">
+              <li style="list-style-type:circle;"> {{lan.COMMON_PASSWORD_NOTICE_1}} {{passwordRules.passwd_size2}} {{lan.COMMON_PASSWORD_NOTICE_2}}</li>
+              <li v-if="passwordRules.passwd_type==2" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_3}}</li>
+              <li v-if="passwordRules.passwd_type==3" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_4}}</li>
+              <li v-if="passwordRules.passwd_type==4" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_5}}</li>
+              <li v-if="passwordRules.passwd_digital" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_6}}</li>
+              <li v-if="passwordRules.passwd_name" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_7}}</li>
+              <li v-if="passwordRules.passwd_name2" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_8}}</li>
+              <li v-if="passwordRules.passwd_letter" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_9}}</li>
+              <li v-if="passwordRules.passwd_letter2" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_10}}</li>
+            </ul>
+          </div>
+        </div>
+        <el-popover
+        ref="popover_f"
+        placement="right"
+        width="300"
+        trigger="focus">
+        <div>
+            <ul style="font-size:12px;">
+              <li :style="{color:check_passwd_size2?'#67C23A':'#F56C6C'}">
+                <i :class="check_passwd_size2?'el-icon-success':'el-icon-error'"></i>
+                {{this.lan.COMMON_PASSWORD_NOTICE_1}}{{passwordRules.passwd_size2}}{{this.lan.COMMON_PASSWORD_NOTICE_2}}
+              </li>
+              <li v-if="passwordRules.passwd_type==2" :style="{color:check_passwd_type_2?'#67C23A':'#F56C6C'}">
+                <i :class="check_passwd_type_2?'el-icon-success':'el-icon-error'"></i>
+                {{this.lan.COMMON_PASSWORD_NOTICE_3}}
+              </li>
+              <li v-if="passwordRules.passwd_type==3" :style="{color:check_passwd_type_3?'#67C23A':'#F56C6C'}">
+                <i :class="check_passwd_type_3?'el-icon-success':'el-icon-error'"></i>
+                {{this.lan.COMMON_PASSWORD_NOTICE_4}}
+              </li>
+              <li v-if="passwordRules.passwd_type==4" :style="{color:check_passwd_type_4?'#67C23A':'#F56C6C'}">
+                <i :class="check_passwd_type_4?'el-icon-success':'el-icon-error'"></i>
+                {{this.lan.COMMON_PASSWORD_NOTICE_5}}
+              </li>
+              <li v-if="passwordRules.passwd_digital" :style="{color:check_passwd_digital?'#67C23A':'#F56C6C'}">
+                <i :class="check_passwd_digital?'el-icon-success':'el-icon-error'"></i>
+                {{this.lan.COMMON_PASSWORD_NOTICE_6}}
+              </li>
+              <li v-if="passwordRules.passwd_letter" :style="{color:check_passwd_letter?'#67C23A':'#F56C6C'}">
+                <i :class="check_passwd_letter?'el-icon-success':'el-icon-error'"></i>
+                {{this.lan.COMMON_PASSWORD_NOTICE_9}}
+              </li>
+              <li v-if="passwordRules.passwd_letter2" :style="{color:check_passwd_letter2?'#67C23A':'#F56C6C'}">
+                <i :class="check_passwd_letter2?'el-icon-success':'el-icon-error'"></i>
+                {{this.lan.COMMON_PASSWORD_NOTICE_10}}
+              </li>
+            </ul>
+          </div>
+      </el-popover>
+
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="form3Visible = false">{{lan.cancel}}</el-button>
+        <el-button type="primary" @click="reset3_submit">{{lan.sure}}</el-button>
+      </div>
+    </el-dialog>
+
+    <!--注册说明弹出框-->
+    <el-dialog :title="lan.REGISTER_AGREEMENT" :visible.sync="agreementVisible" width="600px" :append-to-body="true" style="margin-top: 50px;
+margin-bottom: 50px;" :lock-scroll="false" custom-class="max_height_100_dialog" :close-on-click-modal="false" top="0">
+      <div style="">
+        <div v-html="register_data.agreement" ></div>
+      </div>
+      <div slot="footer" class="dialog-footer" style="position: absolute;bottom: 0;left: 0;right: 0;padding: 10px 20px;">
+        <el-button @click="agreementVisible = false">{{lan.COMMON_BUTTON_CANCELL}}</el-button>
+        <el-button type="primary" @click="show_register_dialog">{{lan.REGISTER_AGREE}}</el-button>
+      </div>
+
+    </el-dialog>
+
+    <!--注册弹出框-->
+    <el-dialog :title="lan.USER_REGISTRATION" :visible.sync="registerVisible" width="600px" :append-to-body="true" :close-on-click-modal="false" top="50px">
+      <el-form :model="register_form" size="small" :rules="register_form_rules" label-width="140px"  ref="register_form">
+        <el-form-item :label="lan.MAILBOX_COM_COMPOSE_MAIL_ADDRESS" prop="username" :error="register_error">
+          <el-input v-model="register_form.username" auto-complete="off" name="register_username">
+            <template slot="append">@{{register_data.domain}}</template>
+          </el-input>
+        </el-form-item>
+        <el-form-item :label="lan.REGISTER_PASSWORD" prop="password">
+          <el-input v-model.trim="register_form_password_input" type="text" v-popover:popover_reg @keyup.native="$trans_pwd('register_form_password_input','register_form.password')"></el-input>
+          <el-input type="hidden" v-model.trim="register_form.password" v-show="false"></el-input>
+        </el-form-item>
+        <el-form-item :label="lan.REGISTER_CONFIRM_PASSWORD" prop="confirm_password">
+          <el-input v-model.trim="register_form_confirm_password_input" type="text" @keyup.native="$trans_pwd('register_form_confirm_password_input','register_form.confirm_password')"></el-input>
+          <el-input type="hidden" v-model.trim="register_form.confirm_password" v-show="false"></el-input>
+        </el-form-item>
+        <el-form-item :label="lan.REGISTER_REALNAME" prop="realname">
+          <el-input v-model="register_form.realname" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item :label="lan.REGISTER_ENGNAME" prop="engname">
+          <el-input v-model="register_form.engname" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item :label="lan.REGISTER_EENUMBER" prop="eenumber">
+          <el-input v-model="register_form.eenumber" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item :label="lan.COMMON_MOBILE" prop="mobile">
+          <el-input v-model="register_form.mobile" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item :label="lan.REGISTER_DEPARTMENT" prop="department" with="100%">
+          <el-cascader v-model="department_value" :props="props"
+                       :options="register_data.departments"
+                       change-on-select></el-cascader>
+        </el-form-item>
+        <el-form-item :label="lan.COMMON_REMARK" prop="remark">
+          <el-input v-model="register_form.remark" type="textarea" :autosize="{ minRows: 2, maxRows: 5}"></el-input>
+        </el-form-item>
+
+        <div v-if="false">
+          <div>
+            <strong style="color: red">{{lan.COMMON_PASSWORD_NOTICE}}</strong>
+            <ul style="margin-left: 26px;">
+              <li style="list-style-type:circle;"> {{lan.COMMON_PASSWORD_NOTICE_1}} {{passwordRules.passwd_size2}} {{lan.COMMON_PASSWORD_NOTICE_2}}</li>
+              <li v-if="passwordRules.passwd_type==2" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_3}}</li>
+              <li v-if="passwordRules.passwd_type==3" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_4}}</li>
+              <li v-if="passwordRules.passwd_type==4" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_5}}</li>
+              <li v-if="passwordRules.passwd_digital" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_6}}</li>
+              <li v-if="passwordRules.passwd_name" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_7}}</li>
+              <li v-if="passwordRules.passwd_name2" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_8}}</li>
+              <li v-if="passwordRules.passwd_letter" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_9}}</li>
+              <li v-if="passwordRules.passwd_letter2" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_10}}</li>
+            </ul>
+          </div>
+        </div>
+
+        <el-popover
+          ref="popover_reg"
+          placement="right"
+          width="300"
+          trigger="focus">
+          <div>
+              <ul style="font-size:12px;">
+                <li :style="{color:check_passwd_size2_reg?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_size2_reg?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_1}}{{passwordRules.passwd_size2}}{{this.lan.COMMON_PASSWORD_NOTICE_2}}
+                </li>
+                <li v-if="passwordRules.passwd_type==2" :style="{color:check_passwd_type_2_reg?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_type_2_reg?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_3}}
+                </li>
+                <li v-if="passwordRules.passwd_type==3" :style="{color:check_passwd_type_3_reg?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_type_3_reg?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_4}}
+                </li>
+                <li v-if="passwordRules.passwd_type==4" :style="{color:check_passwd_type_4_reg?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_type_4_reg?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_5}}
+                </li>
+                <li v-if="passwordRules.passwd_digital" :style="{color:check_passwd_digital_reg?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_digital_reg?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_6}}
+                </li>
+                <li v-if="passwordRules.passwd_letter" :style="{color:check_passwd_letter_reg?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_letter_reg?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_9}}
+                </li>
+                <li v-if="passwordRules.passwd_letter2" :style="{color:check_passwd_letter2_reg?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_letter2_reg?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_10}}
+                </li>
+              </ul>
+          </div>
+      </el-popover>
+
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="registerVisible = false">{{lan.cancel}}</el-button>
+        <el-button type="primary" @click="do_register">{{lan.REGISTER_BUTTON}}</el-button>
+      </div>
+    </el-dialog>
+    <!--<div id="mpanel1" style="margin-top:20px;"></div>-->
+
+    <!--短信 找回密码第二步-->
+    <el-dialog :title="lan.reset_password" :visible.sync="formSmsVisible_2"  :close-on-click-modal="false" :append-to-body="true" width="600px">
+          <div style="padding-bottom:10px;padding-top:20px;">
+            <el-form :model="formSms_2" :rules="formSmsRules_2" ref="phoneForm" label-width="160px" size="small" class="demo-ruleForm"  style="max-width:900px">
+              <el-form-item :label="lan.COMMON_MOBILE" prop="tel">
+                <el-input v-model.trim="formSms_2.tel" style="width:204px;"></el-input>
+
+                <el-button @click="sentSms" :disabled="formSms_2.getcodeDisabled" > {{lan.COMMON_FETCH_VERIFICATION_CODE}} <span v-if="formSms_2.getcodeDisabled">({{formSms_2.ss}} {{lan.SETTING_TWOFACTOR_PHONE_SECOND}})</span> </el-button>
+              </el-form-item>
+              <el-form-item :label="lan.SETTING_TWOFACTOR_PHONE_CODE" prop="code">
+                <el-input v-model.trim="formSms_2.code" style="width:300px;"></el-input>
+              </el-form-item>
+            </el-form>
+          </div>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click.native="formSmsVisible_2 = false">{{lan.COMMON_CLOSE}}</el-button>
+            <el-button type="primary" @click="secretResetSms2">{{lan.sure}}</el-button>
+          </div>
+        </el-dialog>
+
+    <!--短信 找回密码第三步-->
+    <el-dialog :title="lan.reset_password" :visible.sync="formSmsVisible_3" width="400px" :append-to-body="true" :close-on-click-modal="false">
+      <el-form :model="formSms_3" size="small" :rules="formSmsRules_3" ref="formSms_3">
+
+        <el-form-item :label="lan.COMMON_NEW_PASSWORD" prop="new_password">
+          <el-input v-model.trim="formSms_3_new_password_input" type="text" v-popover:popover_sms @keyup.native="$trans_pwd('formSms_3_new_password_input','formSms_3.new_password')"></el-input>
+          <el-input type="hidden" v-model.trim="formSms_3.new_password" v-show="false"></el-input>
+        </el-form-item>
+        <el-form-item :label="lan.COMMON_CONFIRM_PASSWORD" prop="confirm_password">
+          <el-input v-model.trim="formSms_3_confirm_password_input" type="text" @keyup.native="$trans_pwd('formSms_3_confirm_password_input','formSms_3.confirm_password')"></el-input>
+          <el-input type="hidden" v-model.trim="formSms_3.confirm_password" v-show="false"></el-input>
+        </el-form-item>
+        <div v-if="false">
+          <div>
+            <strong style="color: red">{{lan.COMMON_PASSWORD_NOTICE}}</strong>
+            <ul style="margin-left: 26px;">
+              <li style="list-style-type:circle;"> {{lan.COMMON_PASSWORD_NOTICE_1}} {{passwordRules.passwd_size2}} {{lan.COMMON_PASSWORD_NOTICE_2}}</li>
+              <li v-if="passwordRules.passwd_type==2" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_3}}</li>
+              <li v-if="passwordRules.passwd_type==3" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_4}}</li>
+              <li v-if="passwordRules.passwd_type==4" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_5}}</li>
+              <li v-if="passwordRules.passwd_digital" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_6}}</li>
+              <li v-if="passwordRules.passwd_name" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_7}}</li>
+              <li v-if="passwordRules.passwd_name2" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_8}}</li>
+              <li v-if="passwordRules.passwd_letter" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_9}}</li>
+              <li v-if="passwordRules.passwd_letter2" style="list-style-type:circle;">{{lan.COMMON_PASSWORD_NOTICE_10}}</li>
+            </ul>
+          </div>
+        </div>
+
+        <el-popover
+          ref="popover_sms"
+          placement="right"
+          width="300"
+          trigger="focus">
+          <div>
+              <ul style="font-size:12px;">
+                <li :style="{color:check_passwd_size2_sms?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_size2_sms?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_1}}{{passwordRules.passwd_size2}}{{this.lan.COMMON_PASSWORD_NOTICE_2}}
+                </li>
+                <li v-if="passwordRules.passwd_type==2" :style="{color:check_passwd_type_2_sms?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_type_2_sms?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_3}}
+                </li>
+                <li v-if="passwordRules.passwd_type==3" :style="{color:check_passwd_type_3_sms?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_type_3_sms?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_4}}
+                </li>
+                <li v-if="passwordRules.passwd_type==4" :style="{color:check_passwd_type_4_sms?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_type_4_sms?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_5}}
+                </li>
+                <li v-if="passwordRules.passwd_digital" :style="{color:check_passwd_digital_sms?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_digital_sms?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_6}}
+                </li>
+                <li v-if="passwordRules.passwd_letter" :style="{color:check_passwd_letter_sms?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_letter_sms?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_9}}
+                </li>
+                <li v-if="passwordRules.passwd_letter2" :style="{color:check_passwd_letter2_sms?'#67C23A':'#F56C6C'}">
+                  <i :class="check_passwd_letter2_sms?'el-icon-success':'el-icon-error'"></i>
+                  {{this.lan.COMMON_PASSWORD_NOTICE_10}}
+                </li>
+              </ul>
+          </div>
+      </el-popover>
+
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="formSmsVisible_3 = false">{{lan.cancel}}</el-button>
+        <el-button type="primary" @click="resetSms3_submit">{{lan.sure}}</el-button>
+      </div>
+    </el-dialog>
+
+
+
+    <!--页面跳转-->
+    <a :href="banner_url" v-show="false" target="_self" id="banner_a">1</a>
+
+
+
+
+
+  </div>
+
+
+</template>
+<script>
+  import '@/assets/js/wx_login_qy'
+  import '@/assets/js/wx_login_gzh'
+  import cookie from '@/assets/js/cookie';
+  import lan from '@/assets/js/lan';
+  // import RGBaster from 'rgbaster'
+  import {login,resetSecret1,resetSecret2,resetSecret3,loginBefore,registerAgreement,register,setLang,secretReset0,secretResetSms1,secretResetSms2,secretResetSms3,postLoginBefore} from '@/api/api'
+  const emailReg = /^(\w|[-+=.])+@\w+([-.]\w+)*\.(\w+)$/;
+  import router from '@/router'
+  import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
+  export default {
+    data() {
+      let _this = this
+      var validatePass = (rule, value, callback) => {
+        // let reg =  /^(.*(?=.{6,})(?=.*\d)(?=.*[A-Z])(?=.*[a-z]).*)|(.*(?=.{6,})(?=.*\d)(?=.*[A-Za-z])(?=.*[!@#$%^&*? ]).*)$/;
+        let reg =  /^[\d]{6}$/;
+        if (value === '') {
+          callback(new Error(_this.lan.LAYOUT_INDEX_PASSWORD_RULE));
+        }else{
+          if(value.length>16 || value.length<_this.passwordRules.passwd_size2){
+            return callback(new Error(_this.lan.COMMON_PASSWORD_NOTICE_1+_this.passwordRules.passwd_size2+_this.lan.COMMON_PASSWORD_NOTICE_2));
+          }
+          if(_this.passwordRules.passwd_type==2){
+            let reg=/^(?![0-9]+$)(?![a-z]+$)(?![A-Z]+$)(?!([^(0-9a-zA-Z)])+$)^.{1,16}$/;
+            if(!reg.test(value)){
+              return callback(new Error(_this.lan.COMMON_PASSWORD_NOTICE_3));
+            }
+          }else if(_this.passwordRules.passwd_type==3){
+            let reg=/^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z\W_!@#$%^&*`~()-+=.]+$)(?![a-z0-9]+$)(?![a-z\W_!@#$%^&*`~()-+=.]+$)(?![0-9\W_!@#$%^&*`~()-+=.]+$)[a-zA-Z0-9\W_!@#$%^&*`~()-+=.]{1,16}$/;
+            if(!reg.test(value)){
+              return callback(new Error(_this.lan.COMMON_PASSWORD_NOTICE_4));
+            }
+          }else if(_this.passwordRules.passwd_type==4){
+            let reg=/^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?\d)(?=.*?[_!@#$%^&*`~()-+=.])[a-zA-Z\d_!@#$%^&*`~()-+=.]*$/;
+            if(!reg.test(value)){
+              return callback(new Error(_this.lan.COMMON_PASSWORD_NOTICE_5));
+            }
+          }
+          if(_this.passwordRules.passwd_digital){
+            let num = '0123456789'
+            let arr = [];
+            for(let i=1;i<num.length-1;i++){
+              arr.push(num.slice(i-1,i+2));
+            }
+            let num_re = '9876543210'
+            for(let i=1;i<num_re.length-1;i++){
+              arr.push(num_re.slice(i-1,i+2));
+            }
+            let reg = new RegExp(arr.join('|'))
+            if(reg.test(value)){
+              return callback(new Error(_this.lan.COMMON_PASSWORD_NOTICE_6));
+            }
+          }
+          if(_this.passwordRules.passwd_letter){
+            let abc = 'abcdefghijklmnopqrstuvwxyz'
+            let arr = [];
+            for(let i=1;i<abc.length-1;i++){
+              arr.push(abc.slice(i-1,i+2));
+            }
+            let abc_re = 'zyxwvutsrqponmlkjihgfedcba'
+            for(let i=1;i<abc_re.length-1;i++){
+              arr.push(abc_re.slice(i-1,i+2));
+            }
+            let reg = new RegExp(arr.join('|'))
+            if(reg.test(value.toLowerCase())){
+              return callback(new Error(_this.lan.COMMON_PASSWORD_NOTICE_9));
+            }
+          }
+          if(_this.passwordRules.passwd_letter2){
+            let reg = /(\w)*(\w)\2{2}(\w)*/;
+            if(reg.test(value.toLowerCase())){
+              return callback(new Error(_this.lan.COMMON_PASSWORD_NOTICE_10));
+            }
+          }
+          return callback();
+        }
+      };
+      var validatePass2 = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error(_this.lan.LAYOUT_INDEX_PASSWORD_RULE));
+        } else if (value !== this.form3.new_password) {
+          callback(new Error(_this.lan.LAYOUT_INDEX_TWO_INCONSISTENT_PASSWORDS));
+        } else {
+          callback();
+        }
+      };
+      var validatePass2_sms = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error(_this.lan.LAYOUT_INDEX_PASSWORD_RULE));
+        } else if (value !== this.formSms_3.new_password) {
+          callback(new Error(_this.lan.LAYOUT_INDEX_TWO_INCONSISTENT_PASSWORDS));
+        } else {
+          callback();
+        }
+      };
+      return {
+        login_tab:0,
+        wx_login_dialog:false,
+        register_form_password_input:'',
+        register_form_confirm_password_input:'',
+        form3_new_password_input:'',
+        form3_confirm_password_input:'',
+        formSms_3_new_password_input:'',
+        formSms_3_confirm_password_input:'',
+        validatePass:validatePass,
+        na_type_gg:false,
+        password_type:'text',
+        carousel_height:480,
+        canvas_result:0,
+        formSmsVisible_3:false,
+        formSms_3:{
+          carbled:'',
+          new_carbled:'',
+          new_password:'',
+          confirm_password:'',
+        },
+        formSmsRules_3:{
+          new_password: [
+            { validator:validatePass, trigger: ['blur','change'] },
+            // { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+          ],
+          confirm_password: [
+            { validator:validatePass2_sms, trigger: ['blur','change'] },
+            // { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+          ],
+        },
+        carbled:'',
+        new_carbled:'',
+        formSmsVisible_2:false,
+        formSms_2:{
+          tel:'',
+          code:'',
+          getcodeDisabled:false,
+          ss:60,
+          timer:null
+        },
+        formSmsRules_2:{
+          tel:[{ required: true, message: '', trigger: 'blur' }],
+          code:[{ required: true, message: '', trigger: 'blur' }],
+        },
+        banner_url:'',
+        ssl_login:true,
+        wy_ve:'',
+        wy_veryfy:false,
+        bg_counts:2,
+        wy_padding_top:0,
+        wy_bg:'',
+        register_error:'',
+        username_error:false,
+        password_error:false,
+        wy_username_error:false,
+        wy_password_error:false,
+        login_type:'', //cm | xsy
+        props:{
+          value:'id',
+          label: 'label',
+          children: 'children',
+        },
+        domain_hash_id:[],
+        department_value:[],
+        register_data:{
+          agreement:'',
+          departments:[],
+          domain:'',
+        },
+        show_agreement:false,
+        agreementVisible:false,
+
+        default_agreement:'<p><strong><span style="font-size:16px;">邮箱服务条款</span></strong></p>\n' +
+          '<br />\n' +
+          '<p>【注意】欢迎申请使用XXX公司提供的邮箱服务。请用户仔细阅读以下全部内容。如用户不同意本服务条款任意内容，请不要注册或使用邮箱服务。如用户通过进入注册程序并勾选“我同意”，即表示用户与XXX公司已达成协议，自愿接受本服务条款的所有内容。此后，用户不得以未阅读本服务条款内容作任何形式的抗辩。</p>\n' +
+          '<p><strong>1、服务条款的确认和接纳</strong></p>\n' +
+          '<p>邮箱服务相关软件的知识产权归XXX公司所有。XXX公司所提供的服务必须按照其发布的公司章程，服务条款和操作规则严格执行。本服务条款的效力范围及于XXX公司的一切产品和服务，用户在享受XXX公司任何单项服务时，应当受本服务条款的约束。</p>\n' +
+          '<p>当用户使用XXX公司各单项服务时，用户的使用行为视为其对该单项服务的服务条款以及XXX公司在该单项服务中发出的各类公告的同意。</p>\n' +
+          '<p><strong>2、邮箱服务简介</strong></p>\n' +
+          '<p>XXX公司通过国际互联网络为用户提供各项服务。用户必须：</p>\n' +
+          '<p>（1）提供设备，如个人电脑、手机或其他上网设备。</p>\n' +
+          '<p>（2）个人上网和支付与此服务有关的费用。</p>\n' +
+          '<p>考虑到邮箱服务的重要性，用户同意：</p>\n' +
+          '<p>（1）提供及时、详尽及准确的个人资料。</p>\n' +
+          '<p>（2）不断更新注册资料，符合及时、详尽准确的要求。所有原始键入的资料将引用为注册资料。</p>\n' +
+          '<p>如果用户提供的资料不准确，不真实，不合法有效，XXX公司保留结束用户使用XXX公司各项服务的权利。用户同意，用户提供的真实准确的个人资料作为认定用户与帐号的关联性以及用户身份的唯一证据。</p>\n' +
+          '<p><strong>3、服务条款的修改</strong></p>\n' +
+          '<p>XXX公司有权在必要时通过在网页上发出公告等合理方式修改本服务条款以及各单项服务的相关条款。用户在享受各项服务时，应当及时查阅了解修改的内容，并自觉遵守本服务条款以及该单项服务的相关条款。用户如继续使用本服务条款涉及的服务，则视为对修改内容的同意；用户在不同意修改内容的情况下，有权停止使用本服务条款涉及的服务。</p>\n' +
+          '<p><strong>4、服务的变更或中止</strong></p>\n' +
+          '<p>XXX公司保留随时变更或中止服务的权利。用户同意XXX公司有权行使上述权利且不需对用户或第三方承担任何责任。</p>\n' +
+          '<p><strong>5、用户隐私制度</strong></p>\n' +
+          '<p>用户知悉并同意，为便于向用户提供更好的服务，XXX公司将在用户自愿选择服务或者提供信息的情况下收集用户的个人信息，并将这些信息进行整合。在用户使用XXX公司服务时，服务器会自动记录一些信息，包括但不限于URL、IP地址、浏览器类型、使用语言、访问日期和时间，等。为方便用户登录或使用XXX公司的服务，XXX公司在有需要时将使用cookies等技术，并将收集到的信息发送到对应的服务器。用户可以选择接受或者拒绝cookies。如用户选择拒绝cookies，则用户有可能无法登陆或使用依赖于cookies的服务或者功能。XXX公司收集的信息将成为XXX公司常规商业档案的一部分，且有可能因为转让、合并、收购、重组等原因而被转移到XXX公司的继任公司或者指定的一方。XXX公司同意善意使用收集的信息，且采取各项措施保证信息安全。</p>\n' +
+          '<p>尊重用户个人隐私是XXX公司的一项基本政策。所以，作为对以上第2条个人注册资料分析的补充，XXX公司不会公开或透露用户的注册资料及保存在XXX公司各项服务中的非公开内容，除非XXX公司在诚信的基础上认为透露这些信息在以下几种情况是必要的：</p>\n' +
+          '<p>（1）遵守有关法律规定，包括在国家有关机关查询时，提供用户的注册信息、用户在XXX公司的网页上发布的信息内容及其发布时间、互联网地址或者域名。</p>\n' +
+          '<p>（2）保持维护XXX公司的知识产权和其他重要权利。</p>\n' +
+          '<p>（3）在紧急情况下竭力维护用户个人和社会大众的隐私安全。</p>\n' +
+          '<p>（4）根据本条款相关规定或者XXX公司认为必要的其他情况下。</p>\n' +
+          '<p><strong>6、用户的帐号、密码和安全性</strong></p>\n' +
+          '<p>用户一旦注册成功成为用户，用户将得到一个密码和帐号。如果用户未保管好自己的帐号和密码而对用户、XXX公司或第三方造成的损害，用户将负全部责任。另外，每个用户都要对其帐户中的所有活动和事件负全责。用户可随时改变用户的密码和图标，也可以结束旧的帐户重开一个新帐户。用户同意若发现任何非法使用用户帐号或安全漏洞的情况，有义务立即通告XXX公司。</p>\n' +
+          '<p><strong>7、拒绝提供担保和免责声明</strong></p>\n' +
+          '<p>用户明确同意使用XXX公司邮箱服务的风险由用户个人承担。XXX公司的邮箱帐号与服务以“现有”的状态提供给用户，XXX公司明确表示不提供任何类型的担保，不论是明确的或隐含的。XXX公司不担保服务一定能满足用户的要求，也不担保服务不会受中断，XXX公司对服务的及时性、安全性、真实性、出错发生都不作担保。XXX公司拒绝提供任何担保，包括信息能否准确、及时、顺利地传送。用户理解并接受下载或通过XXX公司产品服务取得的任何信息资料取决于用户自己，并由其承担系统受损、资料丢失以及其它任何风险。XXX公司对在服务网上得到的任何商品购物服务、交易进程、招聘信息，都不作担保。用户不会从XXX公司收到口头或书面的意见或信息，XXX公司也不会在这里作明确担保。</p>\n' +
+          '<p><strong>8、免责条款</strong></p>\n' +
+          '<p>XXX公司对直接、间接、偶然、特殊及继起的损害不负责任，这些损害来自：不正当使用产品服务，在网上购买商品或类似服务，在网上进行交易，非法使用服务或用户传送的信息有所变动。这些损害会导致XXX公司形象受损，所以XXX公司早已提出这种损害的可能性。</p>\n' +
+          '<p>XXX公司对本项服务下涉及的境内外基础电信运营商的移动通信网络的故障、技术缺陷、覆盖范围限制、不可抗力、计算机病毒、黑客攻击、用户所在位置、用户关机或其他非XXX公司技术能力范围内的事因等造成的服务中断、用户发送的短信息的内容丢失、出现乱码、错误接收、无法接收、迟延接收不承担责任。</p>\n' +
+          '<p><strong>9、禁止服务的商业化</strong></p>\n' +
+          '<p>用户承诺，非经XXX公司同意，用户不能利用XXX公司各项服务进行销售或其他商业用途。如用户有需要将服务用于商业用途，应书面通知XXX公司并获得XXX公司的明确授权。</p>\n' +
+          '<p><strong>10、用户管理</strong></p>\n' +
+          '<p>用户独立承担其发布内容的责任。用户对服务的使用必须遵守所有适用于服务的地方法律、国家法律和国际法律。用户承诺：</p>\n' +
+          '<p>（1）用户在XXX公司的网页上发布信息或者利用XXX公司的服务时必须符合中国有关法规，不得在XXX公司的网页上或者利用XXX公司的服务制作、复制、发布、传播以下信息：</p>\n' +
+          '<p>(a) 违反宪法确定的基本原则的；</p>\n' +
+          '<p>(b) 危害国家安全，泄露国家秘密，颠覆国家政权，破坏国家统一的；</p>\n' +
+          '<p>(c) 损害国家荣誉和利益的；</p>\n' +
+          '<p>(d) 煽动民族仇恨、民族歧视，破坏民族团结的；</p>\n' +
+          '<p>(e) 破坏国家宗教政策，宣扬邪教和封建迷信的；</p>\n' +
+          '<p>(f) 散布谣言，扰乱社会秩序，破坏社会稳定的；</p>\n' +
+          '<p>(g) 散布淫秽、色情、赌博、暴力、恐怖或者教唆犯罪的；</p>\n' +
+          '<p>(h) 侮辱或者诽谤他人，侵害他人合法权益的；</p>\n' +
+          '<p>(i) 煽动非法集会、结社、游行、示威、聚众扰乱社会秩序的；</p>\n' +
+          '<p>(j) 以非法民间组织名义活动的；</p>\n' +
+          '<p>(k) 含有法律、行政法规禁止的其他内容的。</p>\n' +
+          '<p>（2）用户在XXX公司的网页上发布信息或者利用XXX公司的服务时还必须符合其他有关国家和地区的法律规定以及国际法的有关规定。</p>\n' +
+          '<p>（3）用户不得利用XXX公司的服务从事以下活动：</p>\n' +
+          '<p>(a) 未经允许，进入计算机信息网络或者使用计算机信息网络资源的；</p>\n' +
+          '<p>(b) 未经允许，对计算机信息网络功能进行删除、修改或者增加的；</p>\n' +
+          '<p>(c) 未经允许，对进入计算机信息网络中存储、处理或者传输的数据和应用程序进行删除、修改或者增加的；</p>\n' +
+          '<p>(d) 故意制作、传播计算机病毒等破坏性程序的；</p>\n' +
+          '<p>(e) 其他危害计算机信息网络安全的行为。</p>\n' +
+          '<p>（4）用户不得以任何方式干扰XXX公司的服务。</p>\n' +
+          '<p>（5）用户不得滥用XXX公司邮箱服务，包括但不限于：利用XXX公司提供的邮箱服务发送垃圾邮件，利用XXX公司邮箱服务进行侵害他人知识产权或者合法利益的其他行为。</p>\n' +
+          '<p>（6）用户应遵守XXX公司的所有其他规定和程序。</p>\n' +
+          '<p>用户须对自己在使用XXX公司邮箱服务过程中的行为承担法律责任。用户承担法律责任的形式包括但不限于：对受到侵害者进行赔偿，以及在XXX公司首先承担了因用户行为导致的行政处罚或侵权损害赔偿责任后，用户应给予XXX公司等额的赔偿。用户理解，如果XXX公司发现其网站传输的信息明显属于上段第(1)条所列内容之一，依据中国法律，XXX公司有义务立即停止传输，保存有关记录，向国家有关机关报告，并且删除含有该内容的地址、目录或关闭服务器。</p>\n' +
+          '<p>用户使用XXX公司电子公告服务，包括电子布告牌、电子白板、电子论坛、网络聊天室和留言板等以交互形式为上网用户提供信息发布条件的行为，也须遵守本条的规定以及XXX公司将专门发布的电子公告服务规则，上段中描述的法律后果和法律责任同样适用于电子公告服务的用户。若用户的行为不符合以上提到的服务条款，XXX公司将作出独立判断立即取消用户服务帐号。</p>\n' +
+          '<p><strong>11、保障</strong></p>\n' +
+          '<p>用户同意保障和维护XXX公司全体成员的利益，负责支付由用户使用超出服务范围引起的律师费用，违反服务条款的损害补偿费用，其它人使用用户的电脑、帐号而产生的费用。用户或者使用用户帐号的其他人在进行游戏过程中侵犯第三方知识产权及其他权利而导致被侵权人索赔的，由用户承担责任。</p>\n' +
+          '<p><strong>12、结束服务</strong></p>\n' +
+          '<p>用户或XXX公司可随时根据实际情况终止服务。XXX公司有权单方不经通知终止向用户提供某一项或多项服务；用户有权单方不经通知单方终止接受XXX公司的服务。</p>\n' +
+          '<p>结束用户服务后，用户使用XXX公司邮箱服务的权利立即终止。从那时起，XXX公司不再对用户承担任何义务。</p>\n' +
+          '<p>用户知道并同意，服务变更、中止与结束属于XXX公司商业决策之内容。用户不得因服务的变更、中止或者结束而要求XXX公司继续提供服务或者承担任何形式的赔偿责任，等。</p>\n' +
+          '<p><strong>13、通知</strong></p>\n' +
+          '<p>所有发给用户的通知都可通过电子邮件、常规的信件或在网站显著位置公告的方式进行传送。XXX公司将通过上述方法之一将消息传递给用户，告知他们服务条款的修改、服务变更、或其它重要事情。</p>\n' +
+          '<p><strong>14、参与广告策划</strong></p>\n' +
+          '<p>在XXX公司许可下用户可在他们发表的信息中加入宣传资料或参与广告策划，在XXX公司各项服务上展示他们的产品。任何这类促销方法，包括运输货物、付款、服务、商业条件、担保及与广告有关的描述都只是在相应的用户和广告销售商之间发生。XXX公司不承担任何责任，XXX公司没有义务为这类广告销售负任何一部分的责任。</p>\n' +
+          '<p><strong>15、内容的所有权</strong></p>\n' +
+          '<p>内容的定义包括：文字、软件、声音、相片、视频、图表；在广告中的全部内容；电子邮件系统的全部内容；XXX公司虚拟社区服务为用户提供的商业信息。所有这些内容均属于XXX公司，并受版权、商标、专利和其它财产所有权法律的保护。所以，用户只能在XXX公司和广告商授权下才能使用这些内容，而不能擅自复制、再造这些内容、或创造与内容有关的派生产品。</p>\n' +
+          '<p><strong>16、法律</strong></p>\n' +
+          '<p>本条款适用中华人民共和国的法律，并且排除一切冲突法规定的适用。</p>\n' +
+          '<p>如出现纠纷，用户和XXX公司一致同意将纠纷交由广州市天河区人民法院管辖。</p>\n' +
+          '<p><strong>17、信息储存及相关知识产权</strong></p>\n' +
+          '<p>XXX公司对邮箱上所有服务将尽力维护其安全性及方便性，但对服务中出现的信息（包括但不限于用户发布的信息）删除或储存失败不承担任何责任。另外XXX公司保留判定用户的行为是否符合本服务条款的要求的权利，如果用户违背了本服务条款的规定，XXX公司有权中止或者终止对其XXX公司邮箱帐号的服务。</p>\n' +
+          '<p>在XXX公司邮箱所含服务中，无论是用户原创或是用户得到著作权人授权转载的作品，用户上载的行为即意味着用户或用户代理的著作权人授权XXX公司对上载作品享有免费的不可撤销的永久的使用权和收益权，但用户或原著作权人仍保有上载作品的著作权。</p>\n' +
+          '<p><strong>18、青少年用户特别提示</strong></p>\n' +
+          '<p>青少年用户必须遵守全国青少年网络文明公约：</p>\n' +
+          '<p>要善于网上学习，不浏览不良信息；要诚实友好交流，不侮辱欺诈他人；要增强自护意识，不随意约会网友；要维护网络安全，不破坏网络秩序；要有益身心健康，不沉溺虚拟时空。</p>\n' +
+          '<p><strong>19、XXX公司邮箱帐号的有效期</strong></p>\n' +
+          '<p>用户清楚知悉XXX公司邮箱帐号存在有效期，并同意不定时登录使用XXX公司邮箱帐号以延续其有效期。</p>\n' +
+          '<p>(1)如果用户的XXX公司邮箱帐号下不存在XXX公司充值一卡通点数，而该帐号连续90天没有登录，则XXX公司有权终止用户使用该帐号下的邮箱并将邮箱中的内容删除，同时XXX公司有权删除该XXX公司邮箱帐号；</p>\n' +
+          '<p>(2)如果用户的XXX公司邮箱帐号下存在XXX公司充值一卡通点数，而该帐号连续90天没有登录，则XXX公司有权终止用户使用该帐号下的邮箱并将邮箱中的内容删除；如该帐号连续540天没有登录，则该帐号下的XXX公司充值一卡通点数自该帐号最后一次登录之日起的第 540天24时到期作废，XXX公司有权删除该XXX公司邮箱帐号。</p>\n' +
+          '<p>当帐号被删除后，该XXX公司邮箱帐号的所有资料以及与该XXX公司邮箱帐号相关的全部服务资料和数据（包括但不限于邮箱信息、XXX公司充值一卡通点数信息、游戏帐号信息，等）将同时删除，且不可恢复。该帐号名有可能会被新的用户注册。</p>\n' +
+          '<p>登录XXX公司邮箱是指通过XXX公司邮箱帐号密码认证，包括但不限于如下方式：</p>\n' +
+          '<p>(1)通过Web方式登录XXX公司邮箱；</p>\n' +
+          '<p>(2)通过pop3方式收取该XXX公司邮箱下的邮箱中的信件；</p>\n' +
+          '<p><strong>20、权利声明</strong></p>\n' +
+          '<p>XXX公司不行使、未能及时行使或者未充分行使本条款或者按照法律规定所享有的权利，不应被视为放弃该权利，也不影响XXX公司在将来行使该权利。</p>\n' +
+          '<p>在法律允许的最大范围内，XXX公司保留对本服务条款的最终解释权。</p>\n' +
+          '<p>如用户对本条款内容有任何疑问，可拨打客服电话（010-00000000）进行查询。</p>\n',
+        register_form:{
+          username :'',
+          password :'',
+          confirm_password :'',
+          realname :'',
+          engname :'',
+          eenumber :'',
+          mobile :'',
+          department :'',
+          remark :'',
+        },
+        register_form_rules: {
+          username: [
+            { required: true, message: '', trigger: 'blur' }
+          ],
+          password: [
+            { validator:validatePass,  trigger: ['blur','change'] }
+          ],
+          confirm_password: [
+            { required: true, message: '', trigger: 'blur' }
+          ],
+          realname: [
+            { required: true, message: '', trigger: 'blur' }
+          ],
+          department: [
+            { required: true, message: '', trigger: 'blur' }
+          ],
+        },
+        registerVisible:false,
+        rememberUserInfo:false,
+        language:'zh-hans',
+        bgIndex:0,
+        passwordRules:{},
+        loginBeforeData:{
+          "domain":"",
+          "name":"",
+          "title":"",
+          "is_domain":false,
+          "domains":[],
+          "is_icp":false,
+          "icp_no":"",
+          "icp_link":"",
+          "is_ssl":false,
+          "login_logo":"",
+          "login_ads":[],
+          "is_slide":true
+        },
+        reset1_show:false,
+        form3Visible:false,
+        form3:{
+          carbled:'',
+          new_carbled:'',
+          new_password:'',
+          confirm_password:'',
+        },
+        form3Rule:{
+          new_password: [
+            { validator:validatePass, trigger: ['blur','change'] },
+            // { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+          ],
+          confirm_password: [
+            { validator:validatePass2, trigger: ['blur','change'] },
+            // { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+          ],
+        },
+        formVisible:false,
+        form:{
+          code:'',
+          code_label:'',
+          carbled:'',
+          q1:'',
+          q2:'',
+          q3:'',
+          label_q1:'',
+          label_q2:'',
+          label_q3:'',
+        }
+
+        ,
+        formRule:{
+          code: [
+            { required: true, message: '', trigger: 'blur' }
+          ],
+          q1: [
+            { required: true, message: '', trigger: 'blur' }
+          ],
+          q2: [
+            { required: true, message: '', trigger: 'blur' }
+          ],
+          q3: [
+            { required: true, message: '', trigger: 'blur' }
+          ]
+        },
+        rules:{
+          username: [
+            { required: true, message: '', trigger: 'blur' },
+            // { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+          ],
+          password: [
+            { required: true, message: '', trigger: 'blur' }
+          ],
+        },
+        labelPosition: 'top',
+        formLabelAlign: {
+          username: '',
+          password: ''
+        },
+        randB: ['url(../../assets/img/mainBg0.jpg)', 'url(../../assets/img/aside0.png)'],
+        loading_wy:false,
+        loading_xsy:false,
+        loading_core:false,
+      };
+    },
+    methods: {
+      xsy_wx_login(){
+        this.wx_login_dialog = true;
+        this.$nextTick(()=>{
+          this.init_wx_qrcode();
+        })
+      },
+      login_type_wx(){
+        this.login_tab = 1;
+        this.init_wx_qrcode();
+      },
+      init_wx_qrcode(){
+        if(this.loginBeforeData.is_wxlogin===undefined){
+          this.getLoginBefore();
+        }else{
+          if(this.loginBeforeData.is_wxlogin){
+            if(this.loginBeforeData.is_wxqiye){
+              this.wx_login_qy();
+            }else{
+              this.wx_login_gzh();
+            }
+          }
+        }
+      },
+      resetSms3_submit(){
+        this.$refs['formSms_3'].validate(valid=>{
+          if(valid){
+            let param = {
+              carbled:this.carbled,
+              new_carbled:this.new_carbled,
+              new_password:this.$get_enc_pwd(this.formSms_3.new_password),
+              confirm_password:this.$get_enc_pwd(this.formSms_3.confirm_password),
+            }
+            secretResetSms3(param).then(res=>{
+              this.$message({
+                type:'success',
+                message:this.lan.COMMON_OPRATE_SUCCESS
+              })
+              this.formSmsVisible_3 = false;
+              this.$refs.formSms_3.resetFields();
+            }).catch(err=>{
+              console.log('sms第三步出错！',err)
+            })
+          }else{
+            return false;
+          }
+        })
+      },
+      sentSms(){
+        if(!this.formSms_2.tel || this.formSms_2.tel ==''){
+          this.$message({
+            type:'error',
+            message: this.lan.SETTING_TWOFACTOR_PHONE_RULE,
+          })
+          return ;
+        }
+        let _this = this;
+        let param = {
+          carbled:this.carbled,
+          phone:this.formSms_2.tel
+        }
+        secretResetSms1(param).then(res=>{
+          if(res.data.carbled)this.carbled = res.data.carbled
+
+          this.formSms_2.getcodeDisabled = true;
+          this.formSms_2.ss = 60
+          // 发送验证码
+          if(_this.formSms_2.timer){
+              clearInterval(_this.formSms_2.timer)
+            }
+            _this.formSms_2.timer = setInterval(()=>{
+              _this.formSms_2.ss --;
+              if(_this.formSms_2.ss <=0){
+                _this.formSms_2.getcodeDisabled = false;
+                _this.formSms_2.ss = 60;
+                clearInterval(_this.formSms_2.timer)
+                _this.formSms_2.timer = null
+              }
+            },1000)
+
+        }).catch(err=>{
+          this.formSms_2.getcodeDisabled = false;
+          this.formSms_2.ss = 60;
+          if(err.phone){
+            this.$message({type:'error',message: err.phone[0] })
+          }
+        })
+      },
+      secretResetSms2(){
+        if(!this.formSms_2.code || this.formSms_2.code ==''){
+          this.$message({
+            type:'error',
+            message: this.lan.SETTING_TWOFACTOR_PHONE_CODE_RULE,
+          })
+          return ;
+        }
+        let param = {
+          carbled:this.carbled,
+          verification_code:this.formSms_2.code
+        }
+        secretResetSms2(param).then(res=>{
+          this.carbled = res.data.carbled;
+          this.new_carbled = res.data.new_carbled;
+          this.passwordRules = res.data.rules;
+          this.formSmsVisible_2 = false;
+          this.formSmsVisible_3 = true;
+        }).catch(err=>{
+
+        })
+      },
+      changeSSL(val){
+        this.$store.dispatch('setSslA',val)
+        localStorage.setItem('is_ssl_login',val)
+        let href = ''
+        if(val){
+          href = window.location.origin.replace('http','https')+'/#/login'
+        }else{
+          href = window.location.origin.replace('https','http')+'/#/login'
+        }
+        this.banner_url = href;
+        console.log(href)
+        this.$nextTick(()=>{
+          document.getElementById('banner_a').click();
+        })
+      },
+      initVerify(){
+        let _this = this;
+        $('#mpanel').empty();
+        this.wy_veryfy = false;
+        if(this.loginBeforeData.login_verify == '0'){
+          this.wy_veryfy = true;
+        }else if(this.loginBeforeData.login_verify == '1'){ //运算验证码
+          // this.wy_veryfy = true;
+          // return;
+          $('#mpanel').codeVerify({
+              type : 2,
+              width : '100%',
+              height : '50px',
+              fontSize : '30px',
+              codeLength : 6,
+              explain : _this.lan.ANOTHER_PIC,
+              btnId : 'check_btn',
+              ready : function() {
+                // html2canvas(document.querySelector(".verify-code")).then(canvas => {
+                //     $(".verify-code").html(canvas)
+                // });
+              },
+              success : function() {
+
+              },
+              error : function() {
+
+              }
+          });
+        }else if(this.loginBeforeData.login_verify == '2'){ //拼图验证码
+          let _this = this;
+          $('#mpanel').slideVerify({
+              //滑动验证码type=1，拼图验证码type=2
+              type : 2,
+               mode:'pop',
+
+              //拼图验证码或选择验证码图片名称
+              imgName : ['a.png', 'b.png','c.png','d.png','e.png','f.png','g.png'],
+              explain : _this.lan.LOGIN_VERIFY_EXPLAIN,
+              imgUrl : '/staticvue/verify/images/',
+              //拼图验证码的图片尺寸
+              imgSize : {
+                width: '100%',
+                height: '180px',
+              },
+               blockSize:{
+                width:'30px',
+                 height:'30px'
+               },
+             circleRadius:'5px',
+               barSize:{
+                width:'100%',
+                 height:'40px'
+               },
+
+              //验证成功以后的回调
+              success : function() {
+                _this.wy_veryfy = true;
+                $('.verify-left-bar').css({'width':'100%'})
+                $('.verify-move-block').css({'left':'auto',right:0})
+                $('.verify-msg').text(_this.lan.LOGIN_VERIFY_SUCCESS)
+                $('.verify-msg').css({position:'relative',left:'-20px'})
+              },
+              ready:function(){
+
+              }
+
+          });
+        }else if(this.loginBeforeData.login_verify == '3'){ //选字验证码
+          $('#mpanel').pointsVerify({
+              mode:'pop',
+              defaultNum : 5,
+              checkNum : 3,
+              vSpace : 5,
+              explain : _this.lan.CHECK_CODE_XUANZI,
+              imgUrl : '/staticvue/verify/images/',
+              imgName : ['a.png', 'b.png','c.png','d.png','e.png','f.png','g.png'],
+               imgSize : {
+                width: '100%',
+                height: '180px',
+              },
+              barSize : {
+                width: '100%',
+                height : '40px',
+              },
+              ready : function() {
+              },
+              success : function() {
+                 _this.wy_veryfy = true;
+              },
+              error : function() {
+                 _this.wy_veryfy = false;
+              }
+
+          });
+        }
+
+      },
+      keyupEnter(){
+          document.onkeydown = e =>{
+              if (e.keyCode === 13 && this.$route.name =='login') {
+                if( this.reset1_show || this.formVisible || this.form3Visible||this.agreementVisible || this.registerVisible ){
+                  if(this.formVisible){
+                    this.reset2_submit();
+                  }else if(this.form3Visible){
+                    this.reset3_submit();
+                  }else if(this.agreementVisible){
+                    // this.show_register_dialog();
+                  }else if(this.registerVisible){
+                    this.do_register();
+                  }
+
+                }else{
+                  if(this.login_type == 'cm'){
+                    this.login()
+                  }else if(this.login_type == 'wy'){
+                    this.login_wy()
+                  }else if(this.login_type == 'xsy'){
+                    this.login_xsy()
+                  }
+                }
+              }
+          }
+      },
+      wy_caroucel(){
+        if(this.wy_bg_timer){
+          clearInterval(this.wy_bg_timer)
+        }
+        this.wy_bg_timer = setInterval(()=>{
+          this.wy_bg ++;
+          if(this.wy_bg>this.bg_counts)this.wy_bg=1;
+          this.getColor();
+        },3000)
+      },
+      stop_timer(){
+        if(this.wy_bg_timer){
+          clearInterval(this.wy_bg_timer)
+        }
+      },
+      start_timer(){
+        this.wy_caroucel();
+      },
+      prevTheme(){
+        this.wy_bg --;
+        if(this.wy_bg <=0){
+          this.wy_bg = this.bg_counts
+        }
+        this.getColor();
+      },
+      nextTheme(){
+        this.wy_bg ++;
+        if(this.wy_bg >this.bg_counts){
+          this.wy_bg = 1
+        }
+        this.getColor();
+      },
+      pwd_focus_fn(){
+        this.password_type='password'
+        this.password_error = false;
+        this.wy_password_error = false
+      },
+      clear_username(){
+        this.formLabelAlign.username = ''
+      },
+      remark_page(){
+        this.$alert(this.lan.COLECTION_NOTICE, this.lan.COMMON_BUTTON_CONFIRM_NOTICE, {
+          confirmButtonText: this.lan.COMMON_BUTTON_CONFIRM,
+          callback: action => {
+
+          }
+        });
+      },
+      goToHelp(){
+        let help_lang = 'zh_hans';
+        if(this.language == 'zh-tw'){
+          help_lang = 'zh_hant'
+        }else if(this.language == 'en'){
+          help_lang = 'en'
+        }
+        let href = window.location.origin+'/help/'+help_lang+'/index.html'; //window.location.origin  'http://192.168.1.39:81'
+        window.open(href)
+      },
+      htmlDecodeByRegExp:function (str){
+        var s = "";
+        if(str.length == 0) return "";
+        s = str.replace(/&amp;/g,"&");
+        s = s.replace(/&lt;/g,"<");
+        s = s.replace(/&gt;/g,">");
+        s = s.replace(/&nbsp;/g," ");
+        s = s.replace(/&#39;/g,"\'");
+        s = s.replace(/&quot;/g,"\"");
+        return s;
+      },
+      do_register(){
+        this.register_form.department = this.department_value[this.department_value.length-1]
+        let regRuler = /^[a-z\d]+$/
+        if(this.register_form.username && !regRuler.test(this.register_form.username)){
+          this.$alert(this.lan.USERNAME_DESC)
+          return;
+        }
+        this.$refs['register_form'].validate(valid=>{
+          if(valid){
+            let obj = {
+              username :'',
+              password :this.$get_enc_pwd(this.register_form.password),
+              confirm_password :this.$get_enc_pwd(this.register_form.confirm_password),
+              realname :this.register_form.realname,
+              engname :this.register_form.engname,
+              eenumber :this.register_form.eenumber,
+              mobile :this.register_form.mobile,
+              department :this.register_form.department,
+              remark :this.register_form.remark,
+            };
+            obj.username = this.register_form.username + '@'+this.register_data.domain
+            this.register_error = ''
+            register(obj).then(res=>{
+              
+              if(res.data && res.data.msg){
+                this.$message({
+                  type:'success',
+                  message:res.data.msg
+                  // message:obj.username + this.lan.REGISTER_SUCCESS
+                })
+              }
+              this.registerVisible = false;
+              this.$refs['register_form'].resetFields()
+            }).catch(err=>{
+              if(err.username){
+                this.register_error = err.username[0]
+              }
+            })
+          }else{
+            return false;
+          }
+        })
+      },
+      show_agreement_dialog(){
+        let param = {
+          domain_id:  this.domain_hash_id[this.loginBeforeData.domain]
+        }
+        registerAgreement(param).then(res=>{
+          if(!res.data.agreement || res.data.agreement == -1){
+            this.register_data.agreement = this.default_agreement;
+          }else{
+            this.register_data.agreement = this.htmlDecodeByRegExp(res.data.agreement);
+          }
+          this.passwordRules = res.data.rules;
+          this.register_data.departments = res.data.departments;
+          function filterChildren(arr){
+            arr.forEach(val=>{
+              if(val.children && val.children.length ==0){
+                val.children = null;
+              }
+              if(val.children && val.children.length>0){
+                filterChildren(val.children)
+              }
+            })
+          }
+          if(res.data.show_dept){
+            filterChildren(this.register_data.departments)
+          }else{
+            this.register_data.departments[0].children = null;
+          }
+          this.register_data.domain = res.data.domain;
+          this.agreementVisible = true;
+        }).catch(err=>{
+          console.log(err);
+        })
+      },
+      show_register_dialog(){
+        this.agreementVisible = false;
+        this.registerVisible = true;
+      },
+      changeLanguage(val){
+        cookie.setCookie('webvue_language',val,365*10)
+        this.$store.dispatch('setLanguageA',val)
+        setLang().then(res=>{
+        }).catch(err=>{
+          console.log(err)
+        })
+        // router.go(0)
+        this.initVerify();
+      },
+      changeDomain(val){
+        let param = {
+          domain:val
+        }
+        this.getLoginBefore(param)
+      },
+      ssl_jump(type){
+        let href = window.location.origin.replace('http','https')+'/#/login'
+        if(type == 1){
+          href = window.location.origin.replace('http','https')+'/#/login'
+        }else if(type == 2){
+          href = window.location.origin.replace('https','http')+'/#/login'
+        }
+        this.banner_url = href;
+        console.log(href)
+        this.$nextTick(()=>{
+          document.getElementById('banner_a').click();
+        })
+      },
+      getLoginBefore(param){
+        // let ww = window.open();
+        loginBefore(param).then(res=>{
+          let origin = window.location.origin  //window.location.origin  'http://192.168.1.39:81'
+          this.loginBeforeData = res.data;
+          if(res.data.login_logo){
+            this.loginBeforeData.login_logo = origin + this.loginBeforeData.login_logo;
+          }
+          if(this.loginBeforeData.login_ads && this.loginBeforeData.login_ads.length>0){
+            this.bg_counts = this.loginBeforeData.login_ads.length;
+            for(let i=0;i<this.loginBeforeData.login_ads.length;i++){
+              this.loginBeforeData.login_ads[i].image = origin + this.loginBeforeData.login_ads[i].image;
+            }
+          }
+          // this.loginBeforeData.login_ads = []
+          if(!res.data.is_domain){
+            this.loginBeforeData.domains = [[res.data.domain_id,res.data.domain]]
+          }
+          this.domain_hash_id = [];
+          for(let i=0;i<this.loginBeforeData.domains.length;i++){
+            this.domain_hash_id[this.loginBeforeData.domains[i][1]] = this.loginBeforeData.domains[i][0];
+          }
+          if(res.data.remember_me){
+            if(localStorage['userName']=='' || !localStorage['userName']){
+              this.rememberUserInfo = false;
+            }else{
+              this.rememberUserInfo = true;
+              this.formLabelAlign.username = localStorage['userName']
+            }
+          }else{
+            this.rememberUserInfo = false;
+            this.formLabelAlign.username = '';
+            this.formLabelAlign.password = '';
+            localStorage.removeItem('userName')
+          }
+
+
+          if(this.loginBeforeData.login_page == 1){
+            this.login_type = 'wy';
+            sessionStorage['login_type']  = 'wy'
+          }else if(this.loginBeforeData.login_page == 2){
+            this.login_type = 'xsy';
+            sessionStorage['login_type']  = 'xsy'
+            if(res.data.login_bgmurl && res.data.login_bgmurl!='' &&  res.data.login_bgmurl.length>0){
+              this.$nextTick(()=>{
+                $('#div_main .crm-register-bg').css({'background-image': 'url(' + res.data.login_bgmurl+')'})
+              })
+            }
+          }else if(this.loginBeforeData.login_page == 3){
+            this.login_type = 'cm';
+            sessionStorage['login_type']  = 'cm'
+            if(res.data.login_bgmurl && res.data.login_bgmurl!='' &&  res.data.login_bgmurl.length>0){
+              this.$nextTick(()=>{
+                $('#login_bg').css({'background-image': 'url(' + res.data.login_bgmurl+')'})
+              })
+            }else{
+              this.bgIndex = 4;
+            }
+          }
+          this.$nextTick(()=>{
+            this.initVerify()
+          })
+          this.wy_bg = 1;
+          this.$store.dispatch('setLoginBeforeA',this.loginBeforeData);
+
+          $('title').text(res.data.title)
+          this.getColor()
+          this.wy_caroucel()
+          if(this.loginBeforeData.login_page == 1 || this.loginBeforeData.login_page == 3){
+            this.$nextTick(() => {
+              if(res.data.is_wxlogin){
+                if(res.data.is_wxqiye){
+                  this.wx_login_qy();
+                }else{
+                  this.wx_login_gzh();
+                }
+              }
+            })
+          }
+        }).catch(err=>{
+          console.log(err)
+        })
+      },
+      guid() {
+          function S4() {
+              return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+          }
+          return (S4()+S4()+S4()+S4());
+      },
+      wx_login_qy(){
+        let _this = this;
+        window.WwLogin({       
+            "id" : "wx_qrcode",        
+            "appid" : _this.loginBeforeData.wx_appid,       
+            "agentid" : _this.loginBeforeData.wx_agentid,       
+            "redirect_uri" :location.protocol+'//'+_this.loginBeforeData.wx_callback_domain+'/api/wechat/callback/',  //wx_callback_domain       
+            "state" : _this.guid(), 
+            "href": 'https://www.bestedm.org/static/login/css/login-weixin.css'
+          });
+      },
+      wx_login_gzh(){
+        let _this = this;
+        let obj = new WxLogin({
+            id:"wx_qrcode",
+            appid:  _this.loginBeforeData.wx_appid,
+            scope: "snsapi_login",
+            redirect_uri: 'https://'+_this.loginBeforeData.wx_callback_domain+'/api/wechat/callback/',
+            state: _this.guid(),
+            style: "",
+            href: " https://www.bestedm.org/static/login/css/login-weixin.css"
+        });
+      },
+      reset3_submit(){
+        this.$refs['reset3Form'].validate(valid=>{
+          if(valid){
+            let param = {
+              carbled:this.form3.carbled,
+              new_carbled:this.form3.new_carbled,
+              new_password:this.$get_enc_pwd(this.form3.new_password),
+              confirm_password:this.$get_enc_pwd(this.form3.confirm_password),
+            }
+            resetSecret3(param).then(res=>{
+              this.$message({
+                type:'success',
+                message:this.lan.COMMON_OPRATE_SUCCESS
+              })
+              this.form3Visible = false;
+              this.$refs.reset3Form.resetFields();
+            }).catch(err=>{
+              console.log('第三步出错！',err)
+            })
+          }else{
+            return false;
+          }
+        })
+      },
+      reset2_submit(){
+        this.$refs['reset2Form'].validate(valid=>{
+          if(valid){
+            let param = {
+              code:this.form.code,
+              carbled:this.form.carbled,
+              security_answer1:this.form.q1,
+              security_answer2:this.form.q2,
+              security_answer3:this.form.q3,
+            }
+            resetSecret2(param).then(res=>{
+              this.formVisible = false;
+              this.$refs.reset2Form.resetFields();
+              this.form3.carbled = res.data.carbled;
+              this.form3.new_carbled = res.data.new_carbled;
+              this.passwordRules = res.data.rules
+              this.form3Visible = true;
+            }).catch(err=>{
+              console.log(err)
+            })
+          }else{
+            return false;
+          }
+        })
+      },
+      getLabel(c,b){
+        let str = ''
+        if(c==1){
+          str = this.lan.CONMON_PASSWORD_SECURITY_QD1
+        }else if(c==2){
+          str = this.lan.CONMON_PASSWORD_SECURITY_QD2
+        }else if(c==3){
+          str = this.lan.CONMON_PASSWORD_SECURITY_QD3
+        }else if(c==4){
+          str = this.lan.CONMON_PASSWORD_SECURITY_QD4
+        }else if(c==5){
+          str = this.lan.CONMON_PASSWORD_SECURITY_QD5
+        }else if(c==6){
+          str = this.lan.CONMON_PASSWORD_SECURITY_QD6
+        }else if(c==7){
+          str = this.lan.CONMON_PASSWORD_SECURITY_QD7
+        }else if(c==8){
+          str = this.lan.CONMON_PASSWORD_SECURITY_QD8
+        }else if(c=='custom'){
+          str = b
+        }
+        return str;
+      },
+      forget(){
+        this.reset1_show = true;
+        this.$prompt(this.lan.MAILBOX_COM_COMPOSE_INPUT_EMAIL, this.lan.reset_password, {
+          confirmButtonText: this.lan.sure,
+          closeOnClickModal:false,
+          // dangerouslyUseHTMLString: true,
+          cancelButtonText: this.lan.COMMON_BUTTON_CANCELL,
+          inputPattern: /[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?/,
+          inputErrorMessage: this.lan.CALENDAR_PAGE_SET_MAIL_TYPE
+        }).then(({ value }) => {
+          this.reset1_show = false;
+
+          secretReset0({username:value}).then(res=>{
+            if(res.data.carbled){
+              this.carbled = res.data.carbled;
+            }
+            if(res.data.is_sms && res.data.is_secret){//如果两种方式都打开了
+               this.$confirm('请选择找回密码的方式！', '确认信息', {
+                distinguishCancelAndClose: true,
+                confirmButtonText: '密保找回密码',
+                cancelButtonText: '短信找回密码'
+              })
+                .then(() => {
+                  this.form.carbled = res.data.carbled;
+                  this.form.code_label = res.data.code;
+                  this.form.label_q1 = this.getLabel(res.data.security_question1,res.data.security_custom1);
+                  this.form.label_q2 = this.getLabel(res.data.security_question2,res.data.security_custom2);
+                  this.form.label_q3 = this.getLabel(res.data.security_question3,res.data.security_custom3);
+                  this.formVisible = true;
+                })
+                .catch(action => {
+                  if(action === 'cancel'){//短信找回密码
+                    this.formSmsVisible_2 = true;
+                  }else{//关闭弹窗
+
+                  }
+                });
+            }else if(!res.data.is_sms && res.data.is_secret){ //如果只打开了密保方式
+              this.form.carbled = res.data.carbled;
+              this.form.code_label = res.data.code;
+              this.form.label_q1 = this.getLabel(res.data.security_question1,res.data.security_custom1);
+              this.form.label_q2 = this.getLabel(res.data.security_question2,res.data.security_custom2);
+              this.form.label_q3 = this.getLabel(res.data.security_question3,res.data.security_custom3);
+              this.formVisible = true;
+            }else if(res.data.is_sms && !res.data.is_secret){//如果只打开了手机短信方式
+              this.formSmsVisible_2 = true;
+            }
+
+          }).catch(err=>{
+            console.log(err)
+          })
+        }).catch((err) => {
+          console.log(err)
+          this.reset1_show = false;
+        });
+      },
+      login: function () {
+        var that = this;
+        if(this.loginBeforeData.login_verify == 1){
+          if($('#mpanel .varify-input-code').val() == $('#mpanel .verify-code-area').attr('code_check')){
+            this.wy_veryfy = true;
+          }
+        }
+        if(!this.wy_veryfy){
+          this.$message({
+            type:'error',
+            message:this.lan.CHECK_CODE
+          })
+          return
+        }
+        this.$refs['loginForm'].validate((valid) => {
+          if (valid) {
+            let oo = {
+              "domain_id":this.loginBeforeData.domain_id
+            }
+            let str = '0';
+            if(this.wy_veryfy){
+              str = '1'
+            }
+            oo.sw_webmail_login_slide_token = this.$get_num(20)+new Date().getTime()+str+this.$get_num(21)
+            postLoginBefore(oo).then(res=>{
+              let str = this.formLabelAlign.username;
+              if(this.loginBeforeData.is_domain == 1 || this.loginBeforeData.is_domain == 2){
+                if(!emailReg.test(this.formLabelAlign.username)){
+                  str +='@'+ this.loginBeforeData.domain;
+                }
+              }
+              this.loading_core = true;
+              let uname = this.formLabelAlign.username;
+              let pwd = this.$get_enc_pwd(this.formLabelAlign.password,this.loginBeforeData.expire_time);
+              // if(!this.loginBeforeData.remember_me){
+              //   this.formLabelAlign.username = ''
+              //   this.formLabelAlign.password = ''
+              // }
+              let obj = {
+                "username": str,
+                "password": pwd,
+              }
+              login(obj)
+                .then((response) => {
+                  this.loading_core = false;
+                  if(response.data.token){
+                    cookie.setCookie('name', str, 7);
+                    cookie.setCookie('token', response.data.token, 7);
+                    cookie.delCookie('locked')
+                    // 设置联系人的初始值
+                    window.sessionStorage.clear();
+                    that.$store.dispatch('setInfo')
+                    that.$store.dispatch('setLoginLogsA',response.data.login_logs)
+                    if(this.rememberUserInfo){
+                      localStorage['userName'] = uname
+                    }else{
+                      localStorage.removeItem('userName')
+                    }
+                    // if(this.ssl_login){
+                    //   let href = window.location.origin.replace('http','https')+'/#/mailbox/welcome'
+                    //   this.banner_url = href;
+                    //   this.$nextTick(()=>{
+                    //     document.getElementById('banner_a').click();
+                    //   })
+                    // }else{
+                      if(response.data.is_smtp){
+                        this.$router.push('/setting/mailboxmove?is_smtp=1')
+                      }else{
+                        that.$router.push('/mailbox')
+                      }
+                    // }
+                  }
+                  if(response.data.uuid_string){
+                    this.$router.push({
+                      path:'/twofactor_login',
+                      query:{
+                        uuid_string:response.data.uuid_string,
+                        mail:uname,
+                        totp:response.data.has_totp,
+                        phone:response.data.has_phone,
+                        bi:this.bgIndex,
+                        rememberUserInfo:this.rememberUserInfo
+                      }
+                    })
+                    // this.twofactorList = response.data;
+                  }
+
+                }).catch(err=>{
+                  this.loading_core = false;
+                  console.log(err)
+                });
+            })
+            
+          
+          } else {
+            return false;
+          }
+        });
+
+      },
+      login_xsy: function () {
+        var that = this;
+        if(!this.formLabelAlign.username || this.formLabelAlign.username==''){
+          this.username_error = true;
+          return;
+        }else{
+          this.username_error = false;
+        }
+        if(!this.formLabelAlign.password || this.formLabelAlign.password==''){
+          this.password_error = true;
+          return;
+        }else{
+          this.password_error = false;
+        }
+        if(this.loginBeforeData.login_verify == 1){
+          if($('#mpanel .varify-input-code').val() == $('#mpanel .verify-code-area').attr('code_check')){
+            this.wy_veryfy = true;
+          }
+        }
+        if(!this.wy_veryfy){
+          this.$message({
+            type:'error',
+            message:this.lan.CHECK_CODE
+          })
+          return
+        }
+        let oo = {
+          "domain_id":this.loginBeforeData.domain_id
+        }
+        let str = '0';
+        if(this.wy_veryfy){
+          str = '1'
+        }
+        oo.sw_webmail_login_slide_token = this.$get_num(20)+new Date().getTime()+str+this.$get_num(21)
+        postLoginBefore(oo).then(res=>{
+          let str = this.formLabelAlign.username;
+          if(this.loginBeforeData.is_domain == 1 || this.loginBeforeData.is_domain == 2){
+            if(!emailReg.test(this.formLabelAlign.username)){
+              str +='@'+ this.loginBeforeData.domain;
+            }
+          }
+          this.loading_xsy = true;
+          let uname = this.formLabelAlign.username;
+          let pwd = this.$get_enc_pwd(this.formLabelAlign.password,this.loginBeforeData.expire_time);
+          // if(!this.loginBeforeData.remember_me){
+          //   this.formLabelAlign.username = ''
+          //   this.formLabelAlign.password = ''
+          // }
+          login({"username": str, "password": pwd})
+            .then((response) => {
+              this.loading_xsy = false;
+              if(response.data.token){
+                cookie.setCookie('name', str, 7);
+                cookie.setCookie('token', response.data.token, 7);
+                cookie.delCookie('locked')
+                // 设置联系人的初始值
+                window.sessionStorage.clear();
+                that.$store.dispatch('setInfo');
+                that.$store.dispatch('setLoginLogsA',response.data.login_logs)
+                if(this.rememberUserInfo){
+                  localStorage['userName'] = uname
+                }else{
+                  localStorage.removeItem('userName')
+                }
+                // if(this.ssl_login){
+                //   let href = window.location.origin.replace('http','https')+'/#/mailbox/welcome'
+                //   this.banner_url = href;
+                //   this.$nextTick(()=>{
+                //     document.getElementById('banner_a').click();
+                //   })
+                // }else{
+                  if(response.data.is_smtp){
+                    this.$router.push('/setting/mailboxmove?is_smtp=1')
+                  }else{
+                    that.$router.push('/mailbox')
+                  }
+                // }
+              }
+              if(response.data.uuid_string){
+                this.$router.push({
+                  path:'/twofactor_login',
+                  query:{
+                    uuid_string:response.data.uuid_string,
+                    mail:uname,
+                    totp:response.data.has_totp,
+                    phone:response.data.has_phone,
+                    bi:this.bgIndex,
+                    rememberUserInfo:this.rememberUserInfo
+                  }
+                })
+                // this.twofactorList = response.data;
+              }
+
+            }).catch(err=>{
+              this.loading_xsy = false;
+            });
+        })
+        
+
+      },
+      login_wy: function () {
+        var that = this;
+        if(!this.formLabelAlign.username || this.formLabelAlign.username==''){
+          this.wy_username_error = true
+          this.$message({
+            type:'error',
+            message:this.lan.placeholder_user_name
+          })
+          return;
+        }else{
+          this.wy_username_error = false;
+        }
+        if(!this.formLabelAlign.password || this.formLabelAlign.password==''){
+          this.wy_password_error = true;
+          this.$message({
+            type:'error',
+            message:this.lan.LAYOUT_INDEX_PASSWORD_RULE
+          })
+          return;
+        }else{
+          this.wy_password_error = false;
+        }
+        if(this.loginBeforeData.login_verify == 1){
+          if($('#mpanel .varify-input-code').val() == $('#mpanel .verify-code-area').attr('code_check')){
+            this.wy_veryfy = true;
+          }
+        }
+        if(!this.wy_veryfy){
+          this.$message({
+            type:'error',
+            message:this.lan.CHECK_CODE
+          })
+          return
+        }
+        let oo = {
+          "domain_id":this.loginBeforeData.domain_id
+        }
+        let str = '0';
+        if(this.wy_veryfy){
+          str = '1'
+        }
+        oo.sw_webmail_login_slide_token = this.$get_num(20)+new Date().getTime()+str+this.$get_num(21)
+        postLoginBefore(oo).then(res=>{
+          let str = this.formLabelAlign.username;
+          if(this.loginBeforeData.is_domain == 1 || this.loginBeforeData.is_domain == 2){
+            if(!emailReg.test(this.formLabelAlign.username)){
+              str +='@'+ this.loginBeforeData.domain;
+            }
+          }
+          this.loading_wy = true;
+          let uname = this.formLabelAlign.username;
+          let pwd = this.$get_enc_pwd(this.formLabelAlign.password,this.loginBeforeData.expire_time);
+          // if(!this.loginBeforeData.remember_me){
+          //   this.formLabelAlign.username = ''
+          //   this.formLabelAlign.password = ''
+          // }
+          login({"username": str, "password": pwd})
+            .then((response) => {
+              this.loading_wy = false;
+              if(response.data.token){
+                cookie.setCookie('name', str, 7);
+                cookie.setCookie('token', response.data.token, 7);
+                cookie.delCookie('locked')
+                // 设置联系人的初始值
+                window.sessionStorage.clear();
+                that.$store.dispatch('setInfo');
+                that.$store.dispatch('setLoginLogsA',response.data.login_logs)
+                if(this.rememberUserInfo){
+                  localStorage['userName'] = uname
+                }else{
+                  localStorage.removeItem('userName')
+                }
+                // if(this.ssl_login){
+                //   let href = window.location.origin.replace('http','https')+'/#/mailbox/welcome'
+                //   this.banner_url = href;
+                //   this.$nextTick(()=>{
+                //     document.getElementById('banner_a').click();
+                //   })
+                // }else{
+                  if(response.data.is_smtp){
+                    this.$router.push('/setting/mailboxmove?is_smtp=1')
+                  }else{
+                    that.$router.push('/mailbox')
+                  }
+                // }
+              }
+              if(response.data.uuid_string){
+                this.$router.push({
+                  path:'/twofactor_login',
+                  query:{
+                    uuid_string:response.data.uuid_string,
+                    mail:uname,
+                    totp:response.data.has_totp,
+                    phone:response.data.has_phone,
+                    bi:this.bgIndex,
+                    rememberUserInfo:this.rememberUserInfo
+                  }
+                })
+                // this.twofactorList = response.data;
+              }
+
+            }).catch(err=>{
+              this.loading_wy = false;
+              console.log(err)
+            });
+        })
+        
+
+      },
+      open(str) {
+        this.$alert(str, this.lan.COMMON_BUTTON_CONFIRM_NOTICE, {
+          confirmButtonText: this.lan.COMMON_BUTTON_CONFIRM,
+          // callback: action => {
+          //     this.$message({
+          //     type: 'info',
+          //     message: `action: ${ action }`
+          //     });
+          // }
+        })
+      },
+      test: function () {
+        var apiUrl = 'http://192.168.1.24:9090/ajax_get_captcha';
+        this.$http.post('/api/login/', {
+          "username": "system@test.com",
+          "password": "1QAZ2wsx"
+        }).then((data) => {}, (data) => {});
+      },
+      getColor(){
+        if(this.loginBeforeData.login_ads && this.loginBeforeData.login_ads.length>0){
+          var img = this.loginBeforeData.login_ads[this.wy_bg-1].image;
+          // var img = '/static/img/a_01.jpg';
+          RGBaster.colors(img,{
+            exclude: ['rgb(255,255,255)','rgb(0,0,0)'],
+            success: function(payload) {
+              // payload.dominant是主色，RGB形式表示
+              // payload.secondary是次色，RGB形式表示
+              // payload.palette是调色板，含多个主要颜色，数组
+              $('#mainBg').css({background:payload.dominant})
+              $('#mainBg>div').css({'background-image':'url('+img+')'})
+            }
+          })
+        }
+      }
+    },
+    mounted: function () {
+      // this.test();
+      // 去掉记住用户名和密码
+      // this.formLabelAlign.username = cookie.getCookie('rememberName');
+      // this.formLabelAlign.password = cookie.getCookie('rememberPwd');
+
+      // this.$nextTick(()=>{
+      //   this.table_width = this.$refs.login_bg.getBoundingClientRect().width-this.$refs.aside.getBoundingClientRect().width-40
+      //   // this.read_height = (this.$refs.box_height.getBoundingClientRect().height-83 )+'px'
+      // })
+      if(this.$route.query.message){
+        this.$message({
+          type:'error',
+          duration:5000,
+          message:decodeURIComponent(this.$route.query.message)
+        })
+        this.$router.replace('/login')
+      }
+
+      this.$nextTick(function(){
+        let h = $('#top_box').height();
+        if(h-750>0){
+          this.wy_padding_top = (h-750)/2;
+        }
+      })
+    },
+    computed: {
+      pwd_type:function(){
+        if(this.formLabelAlign.password == ''){
+          return 'text'
+        }else{
+          return 'password'
+        }
+      },
+      lan:function(){
+        let lang = lan.zh
+        if(this.$store.getters.getLanguage=='zh-hans'){
+          lang = lan.zh
+        }else if(this.$store.getters.getLanguage=='zh-tw'){
+          lang = lan.zh_tw
+        }else if(this.$store.getters.getLanguage=='en'){
+          lang = lan.en
+        }else if(this.$store.getters.getLanguage=='es'){
+          lang = lan.zh
+        }else{
+          lang = lan.zh
+        }
+        this.formRule = {
+          code: [
+            { required: true, message: lang.placeholder_validation_code, trigger: 'blur' }
+          ],
+          q1: [
+            { required: true, message: lang.LOGIN_RULE1, trigger: 'blur' }
+          ],
+          q2: [
+            { required: true, message: lang.LOGIN_RULE1, trigger: 'blur' }
+          ],
+          q3: [
+            { required: true, message: lang.LOGIN_RULE1, trigger: 'blur' }
+          ]
+        }
+        this.rules = {
+          username: [
+            { required: true, message: lang.placeholder_user_name, trigger: 'blur' },
+          ],
+          password: [
+            { required: true, message: lang.LAYOUT_INDEX_PASSWORD_RULE, trigger: ['blur','change' ]}
+          ],
+        }
+        this.register_form_rules = {
+          username: [
+            { required: true, message: lang.REGISTER_USERNAME_RULE, trigger: 'blur' }
+          ],
+          password: [
+            { validator:this.validatePass,  trigger: ['blur','change'] }
+          ],
+          confirm_password: [
+            { required: true, message: lang.REGISTER_CONFIRM_PASSWORD_RULE, trigger: 'blur' }
+          ],
+          realname: [
+            { required: true, message: lang.REGISTER_REALNAME_RULE, trigger: 'blur' }
+          ],
+          department: [
+            { required: true, message: lang.REGISTER_DEPARTMENT_RULE, trigger: 'blur' }
+          ],
+        }
+        this.formSmsRules_2 = {
+          tel:[{ required: true, message: lang.SETTING_TWOFACTOR_PHONE_RULE, trigger: 'blur' }],
+          code:[{ required: true, message: lang.SETTING_TWOFACTOR_PHONE_CODE_RULE, trigger: 'blur' }],
+        }
+        return lang
+
+      },
+
+      check_passwd_size2(){
+        let value = this.form3.new_password
+        if(value === '')return false;
+        if(value.length>16 || value.length<this.passwordRules.passwd_size2){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_type_2(){
+        let value = this.form3.new_password;
+        if(value === '')return false;
+        let reg=/^(?![0-9]+$)(?![a-z]+$)(?![A-Z]+$)(?!([^(0-9a-zA-Z)])+$)^.{1,16}$/;
+        if(!reg.test(value)){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_type_3(){
+        let value = this.form3.new_password;
+        if(value === '')return false;
+        let reg=/^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z\W_!@#$%^&*`~()-+=.]+$)(?![a-z0-9]+$)(?![a-z\W_!@#$%^&*`~()-+=.]+$)(?![0-9\W_!@#$%^&*`~()-+=.]+$)[a-zA-Z0-9\W_!@#$%^&*`~()-+=.]{1,16}$/;
+        if(!reg.test(value)){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_type_4(){
+        let value = this.form3.new_password;
+        if(value === '')return false;
+        let reg=/^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?\d)(?=.*?[_!@#$%^&*`~()-+=.])[a-zA-Z\d_!@#$%^&*`~()-+=.]*$/
+        if(!reg.test(value)){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_digital(){
+        let value = this.form3.new_password;
+        if(value === '')return false;
+        let num = '0123456789'
+        let arr = [];
+        for(let i=1;i<num.length-1;i++){
+          arr.push(num.slice(i-1,i+2));
+        }
+        let num_re = '9876543210'
+        for(let i=1;i<num_re.length-1;i++){
+          arr.push(num_re.slice(i-1,i+2));
+        }
+        let reg = new RegExp(arr.join('|'))
+        if(reg.test(value)){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_letter(){
+        let value = this.form3.new_password;
+        if(value === '')return false;
+        let abc = 'abcdefghijklmnopqrstuvwxyz'
+        let arr = [];
+        for(let i=1;i<abc.length-1;i++){
+          arr.push(abc.slice(i-1,i+2));
+        }
+        let abc_re = 'zyxwvutsrqponmlkjihgfedcba'
+        for(let i=1;i<abc_re.length-1;i++){
+          arr.push(abc_re.slice(i-1,i+2));
+        }
+        let reg = new RegExp(arr.join('|'))
+        if(reg.test(value.toLowerCase())){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_letter2(){
+        let value = this.form3.new_password;
+        if(value === '')return false;
+        let reg = /(\w)*(\w)\2{2}(\w)*/;
+        if(reg.test(value.toLowerCase())){
+          return false;
+        }
+        return true;
+      },
+
+      check_passwd_size2_sms(){
+        let value = this.formSms_3.new_password
+        if(value === '')return false;
+        if(value.length>16 || value.length<this.passwordRules.passwd_size2){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_type_2_sms(){
+        let value = this.formSms_3.new_password;
+        if(value === '')return false;
+        let reg=/^(?![0-9]+$)(?![a-z]+$)(?![A-Z]+$)(?!([^(0-9a-zA-Z)])+$)^.{1,16}$/;
+        if(!reg.test(value)){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_type_3_sms(){
+        let value = this.formSms_3.new_password;
+        if(value === '')return false;
+        let reg=/^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z\W_!@#$%^&*`~()-+=.]+$)(?![a-z0-9]+$)(?![a-z\W_!@#$%^&*`~()-+=.]+$)(?![0-9\W_!@#$%^&*`~()-+=.]+$)[a-zA-Z0-9\W_!@#$%^&*`~()-+=.]{1,16}$/;
+        if(!reg.test(value)){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_type_4_sms(){
+        let value = this.formSms_3.new_password;
+        if(value === '')return false;
+        let reg=/^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?\d)(?=.*?[_!@#$%^&*`~()-+=.])[a-zA-Z\d_!@#$%^&*`~()-+=.]*$/
+        if(!reg.test(value)){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_digital_sms(){
+        let value = this.formSms_3.new_password;
+        if(value === '')return false;
+        let num = '0123456789'
+        let arr = [];
+        for(let i=1;i<num.length-1;i++){
+          arr.push(num.slice(i-1,i+2));
+        }
+        let num_re = '9876543210'
+        for(let i=1;i<num_re.length-1;i++){
+          arr.push(num_re.slice(i-1,i+2));
+        }
+        let reg = new RegExp(arr.join('|'))
+        if(reg.test(value)){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_letter_sms(){
+        let value = this.formSms_3.new_password;
+        if(value === '')return false;
+        let abc = 'abcdefghijklmnopqrstuvwxyz'
+        let arr = [];
+        for(let i=1;i<abc.length-1;i++){
+          arr.push(abc.slice(i-1,i+2));
+        }
+        let abc_re = 'zyxwvutsrqponmlkjihgfedcba'
+        for(let i=1;i<abc_re.length-1;i++){
+          arr.push(abc_re.slice(i-1,i+2));
+        }
+        let reg = new RegExp(arr.join('|'))
+        if(reg.test(value.toLowerCase())){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_letter2_sms(){
+        let value = this.formSms_3.new_password;
+        if(value === '')return false;
+        let reg = /(\w)*(\w)\2{2}(\w)*/;
+        if(reg.test(value.toLowerCase())){
+          return false;
+        }
+        return true;
+      },
+
+      check_passwd_size2_reg(){
+        let value = this.register_form.password
+        if(value === '')return false;
+        if(value.length>16 || value.length<this.passwordRules.passwd_size2){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_type_2_reg(){
+        let value = this.register_form.password;
+        if(value === '')return false;
+        let reg=/^(?![0-9]+$)(?![a-z]+$)(?![A-Z]+$)(?!([^(0-9a-zA-Z)])+$)^.{1,16}$/;
+        if(!reg.test(value)){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_type_3_reg(){
+        let value = this.register_form.password;
+        if(value === '')return false;
+        let reg=/^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z\W_!@#$%^&*`~()-+=.]+$)(?![a-z0-9]+$)(?![a-z\W_!@#$%^&*`~()-+=.]+$)(?![0-9\W_!@#$%^&*`~()-+=.]+$)[a-zA-Z0-9\W_!@#$%^&*`~()-+=.]{1,16}$/;
+        if(!reg.test(value)){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_type_4_reg(){
+        let value = this.register_form.password;
+        if(value === '')return false;
+        let reg=/^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?\d)(?=.*?[_!@#$%^&*`~()-+=.])[a-zA-Z\d_!@#$%^&*`~()-+=.]*$/
+        if(!reg.test(value)){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_digital_reg(){
+        let value = this.register_form.password;
+        if(value === '')return false;
+        let num = '0123456789'
+        let arr = [];
+        for(let i=1;i<num.length-1;i++){
+          arr.push(num.slice(i-1,i+2));
+        }
+        let num_re = '9876543210'
+        for(let i=1;i<num_re.length-1;i++){
+          arr.push(num_re.slice(i-1,i+2));
+        }
+        let reg = new RegExp(arr.join('|'))
+        if(reg.test(value)){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_letter_reg(){
+        let value = this.register_form.password;
+        if(value === '')return false;
+        let abc = 'abcdefghijklmnopqrstuvwxyz'
+        let arr = [];
+        for(let i=1;i<abc.length-1;i++){
+          arr.push(abc.slice(i-1,i+2));
+        }
+        let abc_re = 'zyxwvutsrqponmlkjihgfedcba'
+        for(let i=1;i<abc_re.length-1;i++){
+          arr.push(abc_re.slice(i-1,i+2));
+        }
+        let reg = new RegExp(arr.join('|'))
+        if(reg.test(value.toLowerCase())){
+          return false;
+        }
+        return true;
+      },
+      check_passwd_letter2_reg(){
+        let value = this.register_form.password;
+        if(value === '')return false;
+        let reg = /(\w)*(\w)\2{2}(\w)*/;
+        if(reg.test(value.toLowerCase())){
+          return false;
+        }
+        return true;
+      },
+    },
+    created: function () {
+      clearTimeout(this.$store.getters.lock_timer);
+      clearTimeout(this.$store.getters.exp_timer);
+      this.$store.dispatch('setIsLockA',false)
+      // if(localStorage.getItem('is_ssl_login') == null || localStorage.getItem('is_ssl_login') == 'true'){
+      //   this.ssl_login = true;
+      // }else{
+      //   this.ssl_login = false;
+      // }
+
+
+
+      if(location.origin.indexOf('https://') == -1){
+        this.ssl_login = false;
+      }else{
+        this.ssl_login = true;
+      }
+      // console.log('cre')
+      this.keyupEnter();
+      // setInterval(()=>{
+      //   this.bgIndex ++;
+      //   if(this.bgIndex >=4){
+      //     this.bgIndex = 0
+      //   }
+      // },2000)
+      if(sessionStorage['login_type']){
+        this.login_type = sessionStorage['login_type']
+      }
+      var lang = cookie.getCookie('webvue_language')
+      if(lang){
+        cookie.setCookie('webvue_language',lang,365*10)
+      }else{
+        let JsSrc =(navigator.language || navigator.browserLanguage).toLowerCase();
+        if(JsSrc.indexOf('zh')>=0)
+        {
+          // 假如浏览器语言是中文
+          cookie.setCookie('webvue_language','zh-hans',365*10)
+          if(JsSrc=='zh-tw'){
+            cookie.setCookie('webvue_language','zh-tw',365*10)
+          }
+        }
+        else if(JsSrc.indexOf('en')>=0)
+        {
+          // 假如浏览器语言是英文
+          cookie.setCookie('webvue_language','en',365*10)
+        }
+        else
+        {
+          // 假如浏览器语言是其它语言
+          cookie.setCookie('webvue_language','zh-hans',365*10)
+        }
+      }
+      this.$store.dispatch('setLanguageA',cookie.getCookie('webvue_language'))
+      this.language = this.$store.getters.getLanguage;
+
+
+      this.bgIndex = 0 //Math.floor(Math.random()*4)
+      this.bgIndex = 8 //Math.floor(Math.random()*4)
+      this.getLoginBefore()
+      var lett = this;
+      // if(this.$route.name && this.$route.name == 'login'){
+      //   document.onkeydown = function (e) {
+      //     var key = e.keyCode;
+      //     if (key == 13) {
+      //       if( lett.reset1_show || lett.formVisible || lett.form3Visible ){
+      //
+      //       }else{
+      //         if(lett.login_type=='cm'){
+      //           lett.login();
+      //         }else if(lett.login_type=='xsy'){
+      //           lett.login_xsy();
+      //         }else if(lett.login_type=='wy'){
+      //           lett.login_wy();
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
+    },
+    watch:{
+      $route(nv,ov){
+        // router.go(0)
+        // console.log('wat')
+        // location.reload()
+      },
+    }
+  }
+</script>
+<style>
+  .no_re_pwd input.el-input__inner{
+    color:#fff ;
+    caret-color:#000;
+
+  }
+  .crm-register-input-warpper .crm-register-input.no_re_pwd input.el-input__inner{
+    color:transparent !important;
+    caret-color:#fff;
+  }
+  .no_re_pwd input.el-input__inner::selection{ background:#539FFF; color:#539FFF !important;}
+  .crm-register-input-warpper .crm-register-input.no_re_pwd input.el-input__inner::selection {
+    background:blue; color:blue !important;
+  }
+  .no_re_pwd input.el-input__inner::-moz-selection{ background:#539FFF; color:#539FFF; }
+  .crm-register-input-warpper .crm-register-input.no_re_pwd input.el-input__inner::-moz-selection {
+     background:blue; color:blue !important;
+  }
+  .hid_pwd{
+    position:absolute;
+    top: 16px;
+    left: 15px;
+    font-weight: bold;
+    letter-spacing: 1.2px;
+    line-height:1;
+    height:8px;
+    max-width:180px;
+    overflow: hidden;
+  }
+  .main_wy .hid_pwd{
+    left: 30px;
+    top: 18px;
+  }
+  .crm-register-input-warpper .hid_pwd{
+    left: 12px;
+  }
+  #top_box .el-checkbox__label{
+    padding-left:0;
+  }
+  #login_box .el-checkbox,#loginDiv .el-checkbox{
+    margin-right: 10px;
+  }
+  #login_bg .el-carousel__container{
+    height: calc(100% - 27px);
+  }
+  #mpanel>div>div{
+    box-sizing:border-box;
+  }
+  #mpanel .verify-code{
+    /*border:none;*/
+    position: relative;
+  }
+  .no_padding_select .el-input-group__append{
+    padding-left:6px;
+  }
+  .no_padding_select .el-input-group__append .el-input__inner{
+    padding-left:18px;
+  }
+  .success_verify .verify-img-out,.success_verify .verify-sub-block{
+    display:none !important;
+  }
+  #login_wy .change_language input{
+    color:#3399cc;
+    font-size:12px;
+  }
+  #login_wy .is_error input[name='username'],#login_wy .is_error input[name='password']{
+    border-color: #f56c6c;
+  }
+  #login_wy{
+    /*min-width:1000px;*/
+    /*overflow: auto;*/
+  }
+  #login_wy #footer {
+    width: 1000px;
+    color: #848585;
+    margin: 30px auto 0;
+    height: 50px;
+  }
+  #login_wy #footer>div{
+    text-align:center;
+  }
+  .main_wy{
+    /*transition:all 0.5s linear;*/
+  }
+  .m-cnt .m-unlogin .b-unlogn {
+    border-right: none;
+    float: left;
+    margin-right: 8px;
+  }
+  #loginDiv .input_height_46_box input{
+    height:46px;
+  }
+  .m-cnt .m-unlogin {
+    padding: 2px 0 10px 0;
+    font-size: 0;
+    height: 16px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    line-height: 16px;
+  }
+  .loginFunc:after {
+    content: "";
+    position: absolute;
+    /*left: 68px;*/
+    bottom: 0;
+    /*width: 90px;*/
+    /*border-bottom: 2px solid #dcdfe6;*/
+    left: 0;
+    /*width: 102px;*/
+    right:0;
+  }
+  .m-cnt {
+    width: 330px;
+    padding: 0 60px;
+    padding-top:40px;
+  }
+  .mailApp {
+    margin: 22px auto;
+  }
+  .mailApp-logo {
+    height: 35px;
+    display: block;
+    width: 256px;
+    margin: 0 auto;
+  }
+  #extText {
+    line-height: 20px;
+    padding-top: 14px;
+    font-size: 14px;
+  }
+  #extText li {
+    padding-left: 60px;
+    background-position: -240px -118px;
+    background-repeat: no-repeat;
+    background: none;
+    margin-bottom: 5px;
+  }
+  #extText li a, #extText li a:hover {
+    color: #999;
+  }
+  .ext {
+    width: 450px;
+    height: 74px;
+    padding: 0;
+    background: #fafafa;
+    overflow: hidden;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+  }
+  #loginDiv{
+    width: 450px;
+    /*height: 270px;*/
+    padding-bottom:10px;
+  }
+  .loginFunc {
+    width: 100%;
+    height: 48px;
+    clear: both;
+    position: relative;
+  }
+  #login_wy .loginForm {
+    min-height: 420px;
+    padding: 0;
+    border-radius: 8px;
+    background: #fff;
+    position: relative;
+    margin-bottom:0;
+  }
+  .loginFuncApp, .loginFuncNormal {
+    letter-spacing: 1px;
+    /*width: 224px;*/
+    overflow: hidden;
+    position: relative;
+    line-height: 48px;
+    float: left;
+    font-size: 16px;
+    text-align: center;
+    color: #626262;
+    /*color: #3182d9;*/
+    cursor: pointer;
+    font-weight: 400;
+    /*margin:0 auto;*/
+    font-size:18px;
+
+
+  }
+  #loginBlock{
+    width: 450px;
+    top: 28px;
+    right: 16px;
+    text-align: left;
+    position: absolute;
+    z-index: 2;
+    background: #fff;
+    border-radius: 8px;
+    background-image: linear-gradient(-180deg,#fff,#f4f4f4);
+    box-shadow: 2px 2px 5px rgba(0,0,0,.1), -2px -2px 5px rgba(0,0,0,.1);
+  }
+  #musicLink, .nextTheme, .prevTheme {
+    width: 25px;
+    height: 25px;
+    margin-right: 7px;
+    display: none;
+  }
+  #theme {
+    margin: 0 auto;
+    width: 1000px;
+    overflow: hidden;
+ }
+  .themeCtrl {
+    position: absolute;
+    right: 9px;
+    bottom: 8px;
+    text-align: right;
+ }
+  .themeCtrl a {
+    float: left;
+    display: inline;
+  }
+  .prevTheme {
+    background: url(../../assets/img/login/prevthemem.png) 50% no-repeat;
+    background-size: 100% 100%;
+  }
+  .nextTheme {
+    background: url(../../assets/img/login/nexttheme.png) 50% no-repeat;
+    background-size: 100% 100%;
+}
+  .main-inner-wrap {
+    width: 1000px;
+    margin: 0 auto;
+    position: relative;
+  }
+  #login_wy #mobtips,#login_wy #mobtips_arr, #login_wy #mobtips_close, #login_wy #whatAutologinTip, #login_wy .domain, #login_wy .footerLogo, #login_wy .footerNav, #login_wy .formIpt, #login_wy .headerIntro, #login_wy .headerLogo, #login_wy .headerNav {
+    position: absolute;
+  }
+  #login_wy .header {
+    width: 1000px;
+    height: 64px;
+    position: relative;
+    margin: 0 auto;
+    z-index: 2;
+    overflow: hidden;
+  }
+  #login_wy .headerLogo {
+    top: 10px;
+    left: 16px;
+    bottom: 2px;
+  }
+  #login_wy .headerLogo img{
+      max-width: 100%;
+      max-height: 100%;
+  }
+  #login_wy .headerTitle {
+    font-size: 16px;
+    height: 28px;
+    line-height: 28px;
+    width: 156px;
+    display: block;
+    position: absolute;
+    top: 17px;
+    left: 162px;
+    border-left: 1px solid #ccc;
+    color: #777;
+    text-align:center;
+  }
+  #login_wy .header-umail {
+    display: inline-block;
+    width: 136px;
+    height: 32px;
+    background: url(../../assets/img/logo.png) 50% no-repeat;
+    background-size: 100% 100%;
+  }
+  #login_wy .headerNav {
+    top: 21px;
+    right: 16px;
+    text-align: right;
+    color: #cfd0d0;
+  }
+  #login_wy .headerNav a {
+    padding-left: 13px;
+    display: inline-block;
+  }
+  .main_wy {
+    height: 600px;
+    background: #fff;
+    position: relative;
+    min-width: 1000px;
+  }
+  #mainCnt, #theme {
+    height: 600px;
+    position: relative;
+  }
+  #mainCnt {
+      width: 100%;
+      clear: both;
+      background-repeat: no-repeat;
+      background-position: top;
+  }
+  .bg1.main_wy{
+    /*background-color: rgb(251, 221, 211)*/
+    /*background:url(../../assets/img/login/promPic1.jpg) no-repeat;*/
+    background:url(../../assets/img/login/pic-1.jpg) no-repeat center;
+    background-size:cover;
+  }
+  .bg1 #mainCnt{
+    /*background-image:url(../../assets/img/login/promPic1.jpg);*/
+  }
+  .bg2.main_wy{
+    /*background-color: rgb(210, 41, 72);*/
+    background:url(../../assets/img/login/pic-2.jpg) no-repeat center;
+    background-size:cover;
+  }
+
+
+
+  .no_bg_select input{
+    background: transparent;
+    border: none;
+    color:#fff;
+  }
+  .max_height_100_dialog{
+    height:100%;
+    margin-bottom:0;
+
+  }
+  .max_height_100_dialog .el-dialog__body{
+    position:absolute;
+    top:54px;
+    bottom:70px;
+    overflow-y:auto;
+  }
+  #login_bg .el-form-item__label{
+    width:100%;
+  }
+  #login_bg>.main{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
+  #login_bg .main>.content {
+    position: absolute;
+    top: 0;
+    right: 36%;
+    left: 0;
+    bottom: 0;
+    overflow: hidden;
+  }
+  .login_logo{
+    padding:20px;
+    display:inline-block
+  }
+  .login_logo img{
+    max-width:420px;
+    max-height:300px;
+  }
+  .loginForm{
+    margin-bottom:20px;
+  }
+  #login_bg{
+    width:100%;
+
+    height:100%;
+    /*background-image: url(../../assets/img/login/1.jpg);*/
+    background-size: cover;
+    background-position:right bottom;
+  }
+  #login_bg.bg4{
+    background-image: url(../../assets/img/mainBg2.jpg);
+  }
+  #login_bg.bg1{
+    background-image: url(../../assets/img/mainBg1.jpg);
+  }
+  #login_bg.bg2{
+    background-image: url(../../assets/img/mainBg2.jpg);
+  }
+  #login_bg.bg3{
+    background-image: url(../../assets/img/mainBg3.jpg);
+  }
+  body{
+    width:100%;
+    height:100%;
+    /* background:url(../assets/img/mainbg0.jpg); */
+    background-size: cover;
+  }
+  .text-center{
+    text-align:center;
+  }
+  #login_box{
+    background:rgba(255,255,255,1);
+    /* margin:150px auto; */
+    /* width:400px; */
+    border:1px solid #007ACC;
+    padding:20px;
+    box-shadow: 0 0 10px #007ACC;
+    border-radius: 5px;
+    /* display: none; */
+  }
+  .aside-blur {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 36%;
+    bottom: 0;
+    overflow: hidden;
+    transition: width 0.3s ease-out;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    background-position: right bottom;
+    /*background-image: url(../../assets/img/aside0.png);*/
+    background:rgba(0,0,0,0.15);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+  .aside {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 36%;
+    bottom: 0;
+    transition: width 0.3s ease-out;
+  }
+  .loginArea {
+    position: absolute;
+    top: 20%;
+    /*left: 23%;*/
+    /*width: 54%;*/
+    left:0;
+    right:0;
+  }
+  .loginArea .loginType {
+    display: table;
+    width: 100%;
+    line-height: 40px;
+    margin-bottom: 8px;
+  }
+  .content-wrapper {
+    position: relative;
+  }
+  .viceLogo {
+    position: absolute;
+    width: 74%;
+    left: 13%;
+    top: 13%;
+    text-align: center;
+    display: none;
+  }
+  .weather {
+    position: absolute;
+    /* left: 23%; */
+    top: 40px;
+    /* width: 54%; */
+    font-size: 13px;
+    line-height: 36px;
+    display: table;
+  }
+  .f-fl {
+    float: left;
+  }
+  .f-fr {
+    float: right;
+  }
+  .loginType a:last-child {
+    margin-right: 0;
+  }
+  .normalForm [logintype="normalForm"], .ssl [logintype="ssl"] {
+    color: #fff;
+    font-weight: bold;
+  }
+
+  .loginType a {
+    font-size: 14px;
+    margin-right: 16px;
+  }
+  .loginArea .locale {
+    position: relative;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .loginArea .locale {
+    position: relative;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .u-menu-hidden {
+    display: none;
+  }
+
+  .u-menu {
+    position: absolute;
+    z-index: 100;
+    top: 100%;
+    left: -30px;
+    line-height: 1.5;
+    margin: -5px 0 0;
+    padding: 4px 0;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    max-height: 300px;
+    overflow: auto;
+    background: #fff;
+    list-style: none;
+    text-align: left;
+    opacity: 0;
+    transition: opacity .1s ease-out,margin-top .1s ease-out;
+  }
+  .u-menu li {
+    position: relative;
+  }
+  .loginType a:last-child {
+    margin-right: 0;
+  }
+
+  @media (min-height: 1080px){
+    .locale li a {
+      padding-left: 30px;
+    }
+  }
+
+  @media (min-height: 1080px)
+  {
+    .u-menu li a {
+      padding: 13px 30px 13px 43px;
+    }
+  }
+  .locale li a {
+    padding-left: 30px;
+  }
+  .u-menu li a {
+    display: block;
+    margin: -1px 0;
+    overflow: hidden;
+    word-wrap: normal;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #333;
+    text-decoration: none;
+    padding: 12px 30px 12px 43px;
+  }
+  .u-menu a {
+    font-size: 14px;
+  }
+  .copyright {
+    position: absolute;
+    bottom: 30px;
+    left: 50px;
+    color:#fff;
+    font-style: normal;
+  }
+  .version {
+    position: absolute;
+    top: 20%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    /* background: url(../assets/img/login_center.png) 50% 50%; */
+  }
+  .el-cascader--small{
+    width: 100%;
+  }
+
+
+
+  body {
+    font-family: Arial, 'Hiragino Sans GB', 'å¾®è½¯é›…é»‘', 'é»‘ä½“-ç®€', Helvetica, sans-serif;
+    font-size: 14px;
+    overflow: auto;
+    height: 100%;
+    color: #3d5266;
+    background: #fff;
+  }
+  a:link, a:visited {
+    text-decoration: none;
+    color: #3399cc;
+    outline: none;
+  }
+.register-wrapper {
+    color: #3d5266;
+    font-size: 12px;
+    position: relative;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    height: 100%;
+    background: #ebedf0;
+  }
+  .crm-register-bg {
+    width: 100%;
+    height: 100%;
+    background: url(../../assets/img/login/login_bg.jpg);
+    /*background: url(../../assets/img/login/1.jpg);*/
+    /*background: url(../../assets/img/mainBg2.jpg);*/
+    background-position: right bottom;
+    background-size: cover;
+    padding-top: 6%;
+  }
+  @media screen and (max-height: 610px) {
+    .crm-register-bg {
+      padding-top: 0;
+    }
+  }
+  .crm-register-bg{
+    overflow-y: hidden;
+  }
+  @media screen and (max-height:640px){
+    .crm-register-bg{
+      overflow-y: scroll;
+    }
+
+  }
+  .bottom-logo {
+    background: center center no-repeat;
+    /*background-image: url(../../assets/img/logo.png);*/
+    position: absolute;
+    /*width: 192px;*/
+    margin: 0 auto;
+    height: 58px;
+    top: 22px;
+    left: 100px;
+    margin-left: -75px;
+  }
+  .crm-register-container {
+    color: rgba(255, 255, 255, 0.48);
+    position: absolute;
+    top: 42px;
+    right: 40px;
+  }
+  [act="login_link"]:link, [act="login_link"]:visited, [act="reg_link"]:link, [act="reg_link"]:visited {
+    color: white;
+  }
+
+  .crm-register-container > a {
+      margin-left: 18px;
+      border: 1px solid white;
+      padding: 7px 24px;
+      border-radius: 3px;
+  }
+  .crm-beian-container {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    /*width: 300px;*/
+    margin: 0px auto 21px auto;
+  }
+  .crm-beian-container > .crm-beian-link {
+    display: inline-block;
+    width: 100%;
+    text-decoration: none;
+    height: 20px;
+    line-height: 20px;
+  }
+  .crm-beian-container > .crm-beian-link > .crm-beian-text {
+    float: right;
+    height: 20px;
+    line-height: 20px;
+    margin: 0px 40px 0px 5px;
+    color: rgba(255, 255, 255, 0.48);
+  }
+  .crm-beian-container > .crm-beian-link > .crm-beian-image {
+    width: 16px;
+    height: 16px;
+    float: right;
+  }
+
+  img {
+      border: 0;
+  }
+  .crm-register-form {
+    color: white;
+    width: 385px;
+    margin: 0 auto;
+    padding-top: 110px;
+    padding-bottom:20px;
+    text-align: center;
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    position: relative;
+    z-index: 0;
+    border-radius: 5px;
+    position: relative;
+    /*background:rgba(0,0,0,0.2);*/
+  }
+  .crm-login-form .crm-login1-header {
+    padding-bottom: 45px;
+    position: relative;
+  }
+  .crm-register-form header h1 {
+    font-size: 25px;
+    font-weight: normal;
+    color: white;
+  }
+
+  h1 {
+      font-size: 24px;
+      font-weight: bold;
+      line-height: 44px;
+      margin-top: 0;
+      margin-bottom: 0;
+  }
+  .crm-register-body {
+    transform: scale(0.9, 0.9);
+    -moz-transform: none;
+  }
+  ul{
+    list-style:none;
+    padding: 0;
+    margin: 0;
+  }
+  .crm-register-body > ul li {
+    margin-bottom: 20px;
+  }
+  .crm-register-input-warpper.error {
+    border-bottom: 2px solid #fa7252;
+    position: relative;
+  }
+
+  .crm-register-input-warpper {
+      line-height: 40px;
+      width: 100%;
+      height: 40px;
+      border-bottom: 1px solid white;
+      position: relative;
+  }
+  .crm-register-body span.errorinfo {
+    text-align: left;
+    display: block;
+    margin-left: 20px;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #fa7252;
+  }
+  input{
+    outline:none;
+  }
+  .crm-register-input-warpper.error .crm-register-input {
+    color: #fa7252;
+  }
+
+  .crm-register-input-warpper .crm-register-input {
+      font-size: 16px;
+      float: left;
+      /*width: 67%;*/
+      width: 228px;
+      line-height: 32px;
+      height: 32px;
+      text-indent: 8px;
+      border: none;
+      border-radius: 100px;
+      background-color: transparent !important;
+      /*padding: 5px 0;*/
+    outline:none;
+      /* margin-left: 10px; */
+      color: white;
+      margin-top: 3px;
+    -webkit-appearance: none !important;
+	-webkit-user-select: text !important;
+	outline-color: transparent !important;
+    text-shadow: none !important;
+    /*box-shadow: none;*/
+    /*text-fill-color: white;*/
+	  /*-webkit-text-fill-color: white;*/
+    transition: background-color 5000s ease-in-out 0s;
+  }
+  .crm-register-input-warpper.error .login_box_delete {
+    opacity: 0;
+  }
+
+  .login_box_delete {
+      display: inline-block;
+      width: 25px;
+      height: 25px;
+      margin-top: 5px;
+      /*margin-left: 91px;*/
+      margin-left: 4px;
+      cursor: pointer;
+      display: none;
+      float: left;
+  }
+  input:focus{background:transparent !important;}
+
+  .crm-register-verification {
+      background: transparent;
+      border-radius: 3px;
+      height: 30px;
+      margin-top: 3px;
+      cursor: pointer;
+      float: right;
+      width: 27%;
+      word-break: break-all;
+      line-height: 14px;
+      display: flex;
+  }
+  .crm-register-verification {
+    background: transparent;
+    border-radius: 3px;
+  }
+
+  .crm-login-form .crm-register-verification {
+    font-size: 14px;
+    text-align: center;
+    border-left: none;
+    cursor: default;
+    height: 30px;
+    line-height: 30px;
+    margin-top: 3px;
+    position: absolute;
+    right: 0;
+    overflow: hidden;
+    max-width: 150px;
+    width: 30%;
+    background: transparent;
+  }
+  .crm-login-form .crm-register-verification > a {
+    text-align: right;
+    color: white;
+    width: 100%;
+    padding: 0 4px;
+  }
+  .crm-register-body > ul li {
+    margin-bottom: 20px;
+  }
+  .crm-login-form .crm-register-footer {
+    margin-top: 30px;
+  }
+  .crm-register-footer .pg-btn-submit {
+    font-size: 17px;
+    line-height: 40px;
+    width: 130px;
+    height: 40px;
+    color: #fff;
+    border-radius: 3px;
+    background: rgb(75, 129, 239);
+  }
+  .dinline-block {
+    display: inline-block;
+  }
+  .crm-register-footer .pg-btn-submit:hover {
+    text-decoration: none;
+    background: rgb(116, 150, 247);
+  }
+  .crm-login1-body .crm-register-input-warpper.error .crm-register-verification > a {
+    color: #fa7252;
+  }
+  .crm-register-container .no_border input{
+    background:transparent;
+    color:#fff;
+  }
+  .no_border.color_white input{
+    background:transparent;
+    color:#fff;
+  }
+  .crm-register-input-warpper .crm-register-input input{
+    background: transparent !important;
+    padding-left:0;
+    border:none;
+    color:#fff;
+  }
+</style>
+
